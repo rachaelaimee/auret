@@ -9,6 +9,8 @@ import {
   where,
   getDocs,
   addDoc,
+  orderBy,
+  limit,
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore'
@@ -185,6 +187,17 @@ export async function getShopByHandle(handle: string): Promise<Shop | null> {
   return null
 }
 
+export async function getShopById(shopId: string): Promise<Shop | null> {
+  const shopRef = doc(db, 'shops', shopId)
+  const shopDoc = await getDoc(shopRef)
+  
+  if (shopDoc.exists()) {
+    return { id: shopDoc.id, ...shopDoc.data() } as Shop
+  }
+  
+  return null
+}
+
 export async function getShopsByOwner(ownerId: string): Promise<Shop[]> {
   const shopsRef = collection(db, 'shops')
   const q = query(shopsRef, where('ownerId', '==', ownerId))
@@ -277,4 +290,65 @@ export async function getActiveProductsByShop(shopId: string): Promise<Product[]
     id: doc.id,
     ...doc.data()
   })) as Product[]
+}
+
+// Get all active products for discovery
+export async function getAllActiveProducts(limitCount?: number): Promise<Product[]> {
+  const productsRef = collection(db, 'products')
+  let q = query(
+    productsRef,
+    where('status', '==', 'active'),
+    orderBy('createdAt', 'desc')
+  )
+  
+  if (limitCount) {
+    q = query(q, limit(limitCount))
+  }
+  
+  const querySnapshot = await getDocs(q)
+  
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Product[]
+}
+
+// Search products by title and tags
+export async function searchProducts(searchTerm: string, limitCount: number = 20): Promise<Product[]> {
+  const productsRef = collection(db, 'products')
+  const searchTermLower = searchTerm.toLowerCase()
+  
+  // Get all active products and filter client-side
+  // Note: Firestore doesn't have full-text search, so we do basic filtering
+  const q = query(
+    productsRef,
+    where('status', '==', 'active'),
+    orderBy('createdAt', 'desc')
+  )
+  
+  const querySnapshot = await getDocs(q)
+  
+  const allProducts = querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Product[]
+  
+  // Filter products that match the search term
+  const filteredProducts = allProducts.filter(product => {
+    const titleMatch = product.title.toLowerCase().includes(searchTermLower)
+    const tagMatch = product.tags?.some(tag => 
+      tag.toLowerCase().includes(searchTermLower)
+    ) || false
+    
+    return titleMatch || tagMatch
+  })
+  
+  return filteredProducts.slice(0, limitCount)
+}
+
+// Get featured products (for homepage)
+export async function getFeaturedProducts(limitCount: number = 12): Promise<Product[]> {
+  // For now, just get recent active products
+  // Later we can add a "featured" field to products
+  return getAllActiveProducts(limitCount)
 }

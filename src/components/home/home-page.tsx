@@ -1,11 +1,47 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from "next/link";
 import { Navigation } from "@/components/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
+import { getFeaturedProducts, getShopById } from '@/lib/firestore'
+import { ProductCard } from '@/components/product/product-card-simple'
 
 export function HomePage() {
   const { user } = useAuth();
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadFeaturedProducts() {
+      try {
+        const products = await getFeaturedProducts(8) // Get 8 featured products
+        
+        // Get shop info for each product
+        const productsWithShops = await Promise.all(
+          products.map(async (product) => {
+            const shop = await getShopById(product.shopId)
+            return {
+              ...product,
+              shop: shop ? {
+                handle: shop.handle,
+                name: shop.name,
+                logoUrl: shop.logoUrl
+              } : null
+            }
+          })
+        )
+        
+        setFeaturedProducts(productsWithShops.filter(p => p.shop))
+      } catch (error) {
+        console.error('Error loading featured products:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadFeaturedProducts()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
@@ -36,6 +72,31 @@ export function HomePage() {
               Start Selling
             </Link>
           </div>
+
+          {/* Featured Products */}
+          {!isLoading && featuredProducts.length > 0 && (
+            <div className="mt-16">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold text-slate-900">Featured Products</h2>
+                <Link 
+                  href="/search"
+                  className="text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                  View All →
+                </Link>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featuredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    shop={product.shop}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Features */}
           <div className="grid md:grid-cols-3 gap-8 mt-16">
