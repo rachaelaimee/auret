@@ -1,4 +1,4 @@
-export default function BrowseProducts() {
+export default function PeruseProducts() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-8">
       <div className="container mx-auto">
