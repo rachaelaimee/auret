@@ -161,7 +161,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
               <p className="text-sm text-slate-600 mb-4">
                 Explore the marketplace and find unique handmade items and digital craft assets.
               </p>
-              <Link href="/search">
+              <Link href="/browse">
                 <Button variant="outline">Browse Products</Button>
               </Link>
             </CardContent>

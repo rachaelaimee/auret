@@ -8,19 +8,56 @@ import { getAllActiveProducts, searchProducts, getShopById } from '@/lib/firesto
 import { ProductCard } from '@/components/product/product-card-simple'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, Filter, Loader2 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Search, Filter, Loader2, SlidersHorizontal, ArrowUpDown } from 'lucide-react'
 
 export function ProductDiscoveryPage() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
   const [products, setProducts] = useState<any[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedType, setSelectedType] = useState<'all' | 'physical' | 'digital'>('all')
+  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'popular'>('newest')
+  const [priceRange, setPriceRange] = useState<'all' | 'under-25' | '25-100' | '100-500' | 'over-500'>('all')
 
   useEffect(() => {
     loadProducts()
   }, [searchTerm, selectedType])
+
+  // Apply filters and sorting when products or filters change
+  useEffect(() => {
+    let filtered = [...products]
+
+    // Apply price range filter
+    if (priceRange !== 'all') {
+      filtered = filtered.filter(product => {
+        const price = product.price || 0
+        switch (priceRange) {
+          case 'under-25': return price < 25
+          case '25-100': return price >= 25 && price <= 100
+          case '100-500': return price >= 100 && price <= 500
+          case 'over-500': return price > 500
+          default: return true
+        }
+      })
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'price-low': return (a.price || 0) - (b.price || 0)
+        case 'price-high': return (b.price || 0) - (a.price || 0)
+        case 'popular': return (b.views || 0) - (a.views || 0)
+        case 'newest':
+        default:
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      }
+    })
+
+    setFilteredProducts(filtered)
+  }, [products, priceRange, sortBy])
 
   const loadProducts = async () => {
     setIsLoading(true)
@@ -87,7 +124,7 @@ export function ProductDiscoveryPage() {
           {/* Search and Filters */}
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
             {/* Search Bar */}
-            <form onSubmit={handleSearch} className="flex gap-4 mb-4">
+            <form onSubmit={handleSearch} className="flex gap-4 mb-6">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
                 <Input
@@ -107,10 +144,10 @@ export function ProductDiscoveryPage() {
               </Button>
             </form>
 
-            {/* Type Filters */}
-            <div className="flex items-center gap-2">
+            {/* Filters Row 1: Product Type */}
+            <div className="flex items-center gap-2 mb-4">
               <Filter className="h-4 w-4 text-slate-500" />
-              <span className="text-sm text-slate-600 mr-2">Filter by type:</span>
+              <span className="text-sm text-slate-600 mr-2">Product type:</span>
               
               <button
                 onClick={() => setSelectedType('all')}
@@ -143,6 +180,59 @@ export function ProductDiscoveryPage() {
                 Digital Downloads
               </button>
             </div>
+
+            {/* Filters Row 2: Price and Sorting */}
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Price Range Filter */}
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="h-4 w-4 text-slate-500" />
+                <span className="text-sm text-slate-600">Price:</span>
+                <Select value={priceRange} onValueChange={(value: any) => setPriceRange(value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Prices</SelectItem>
+                    <SelectItem value="under-25">Under $25</SelectItem>
+                    <SelectItem value="25-100">$25 - $100</SelectItem>
+                    <SelectItem value="100-500">$100 - $500</SelectItem>
+                    <SelectItem value="over-500">Over $500</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sort By */}
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="h-4 w-4 text-slate-500" />
+                <span className="text-sm text-slate-600">Sort by:</span>
+                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                  <SelectTrigger className="w-36">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="popular">Most Popular</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Clear Filters */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setPriceRange('all')
+                  setSortBy('newest')
+                  setSelectedType('all')
+                  setSearchTerm('')
+                }}
+                className="ml-auto"
+              >
+                Clear All Filters
+              </Button>
+            </div>
           </div>
 
           {/* Loading State */}
@@ -159,16 +249,21 @@ export function ProductDiscoveryPage() {
           {!isLoading && (
             <>
               {/* Results Count */}
-              <div className="mb-6">
+              <div className="mb-6 flex justify-between items-center">
                 <p className="text-slate-600">
-                  Found {products.length} amazing {products.length === 1 ? 'product' : 'products'}
+                  Showing {filteredProducts.length} of {products.length} amazing {products.length === 1 ? 'product' : 'products'}
                 </p>
+                {filteredProducts.length !== products.length && (
+                  <p className="text-sm text-slate-500">
+                    {products.length - filteredProducts.length} products filtered out
+                  </p>
+                )}
               </div>
 
               {/* Products Grid */}
-              {products.length > 0 ? (
+              {filteredProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {products.map((product) => (
+                  {filteredProducts.map((product) => (
                     <ProductCard
                       key={product.id}
                       product={product}
@@ -182,23 +277,27 @@ export function ProductDiscoveryPage() {
                     <Search className="h-12 w-12 mx-auto mb-4" />
                   </div>
                   <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                    No products found
+                    {products.length > 0 ? 'No products match your filters' : 'No products found'}
                   </h3>
                   <p className="text-slate-600 mb-4">
-                    {searchTerm 
-                      ? `No products match "${searchTerm}". Try different keywords or browse all products.`
-                      : 'No products are currently available. Check back soon for amazing new items!'
+                    {products.length > 0 
+                      ? 'Try adjusting your filters or search terms to see more products.'
+                      : searchTerm 
+                        ? `No products match "${searchTerm}". Try different keywords or browse all products.`
+                        : 'No products are currently available. Check back soon for amazing new items!'
                     }
                   </p>
-                  {searchTerm && (
+                  {(searchTerm || selectedType !== 'all' || priceRange !== 'all' || sortBy !== 'newest') && (
                     <Button 
                       variant="outline"
                       onClick={() => {
                         setSearchTerm('')
                         setSelectedType('all')
+                        setPriceRange('all')
+                        setSortBy('newest')
                       }}
                     >
-                      Browse All Products
+                      Clear All Filters
                     </Button>
                   )}
                 </div>
