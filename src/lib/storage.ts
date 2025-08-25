@@ -6,8 +6,7 @@ export interface UploadResult {
 }
 
 /**
- * Temporary fallback: Generate placeholder images while we fix Vercel Blob
- * This lets you continue building your marketplace!
+ * Upload image using a simple server-side approach
  */
 export async function uploadImage(
   file: File,
@@ -19,20 +18,39 @@ export async function uploadImage(
   const filePath = `${folder}/${fileName}`
   
   try {
-    // Create a beautiful placeholder image with the file name
+    // Create FormData for the upload
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('filename', filePath)
+    
+    // Upload to our simple API endpoint
+    const response = await fetch('/api/upload-image', {
+      method: 'POST',
+      body: formData,
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.status}`)
+    }
+    
+    const result = await response.json()
+    
+    return {
+      url: result.url,
+      path: filePath
+    }
+  } catch (error) {
+    console.error('Error uploading image:', error)
+    
+    // Fallback to placeholder if upload fails
     const productName = file.name.replace(/\.[^/.]+$/, "").substring(0, 15)
     const placeholderUrl = `https://via.placeholder.com/400x300/6366f1/ffffff?text=${encodeURIComponent(productName)}`
     
-    // Simulate upload delay for realistic UX
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    console.log('Using placeholder image as fallback')
     return {
       url: placeholderUrl,
       path: filePath
     }
-  } catch (error) {
-    console.error('Error creating placeholder:', error)
-    throw new Error('Failed to process image. Please try again.')
   }
 }
 
