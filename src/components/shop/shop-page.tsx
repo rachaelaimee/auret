@@ -53,9 +53,17 @@ export function ShopPage({ shop }: ShopPageProps) {
           <div className="bg-white rounded-lg shadow-sm border p-8 mb-8">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center space-x-4">
-                <div className="h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Store className="h-8 w-8 text-white" />
-                </div>
+                {shop.logoUrl ? (
+                  <img
+                    src={shop.logoUrl}
+                    alt={`${shop.name} logo`}
+                    className="h-16 w-16 object-cover rounded-lg border border-slate-200"
+                  />
+                ) : (
+                  <div className="h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <Store className="h-8 w-8 text-white" />
+                  </div>
+                )}
                 <div>
                   <h1 className="text-3xl font-bold text-slate-900 mb-1">{shop.name}</h1>
                   <p className="text-slate-600">@{shop.handle}</p>

@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, Upload, X } from 'lucide-react'
+import { uploadImage, validateImageFile } from '@/lib/storage'
 
 const shopCreateSchema = z.object({
   handle: z.string()
@@ -39,6 +40,9 @@ export function ShopCreateForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [handleStatus, setHandleStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
 
   const {
     register,
@@ -116,12 +120,32 @@ export function ShopCreateForm() {
         return
       }
 
+      let logoUrl = ''
+
+      // Upload logo if provided
+      if (logoFile) {
+        setIsUploadingLogo(true)
+        try {
+          const result = await uploadImage(logoFile, 'shop-logos')
+          logoUrl = result.url
+        } catch (uploadError) {
+          console.error('Error uploading logo:', uploadError)
+          setError('Failed to upload logo. Please try again.')
+          setIsSubmitting(false)
+          setIsUploadingLogo(false)
+          return
+        } finally {
+          setIsUploadingLogo(false)
+        }
+      }
+
       // Create the shop
       const shop = await createShop({
         ownerId: user.uid,
         handle: data.handle,
         name: data.name,
         bio: data.bio || '',
+        logoUrl: logoUrl || undefined,
         country: data.country,
         currency: 'USD', // Default to USD for now
         status: 'active',
@@ -135,6 +159,28 @@ export function ShopCreateForm() {
       setError(err.message || 'Failed to create shop. Please try again.')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
+    setLogoFile(file)
+    setLogoPreview(URL.createObjectURL(file))
+  }
+
+  const removeLogo = () => {
+    setLogoFile(null)
+    if (logoPreview) {
+      URL.revokeObjectURL(logoPreview)
+      setLogoPreview(null)
     }
   }
 
@@ -219,6 +265,64 @@ export function ShopCreateForm() {
         <p className="text-xs text-slate-500">
           A compelling bio helps customers connect with your brand.
         </p>
+      </div>
+
+      {/* Shop Logo */}
+      <div className="space-y-2">
+        <Label>Shop Logo</Label>
+        <div className="flex items-center gap-4">
+          {logoPreview ? (
+            <div className="relative">
+              <img
+                src={logoPreview}
+                alt="Shop logo preview"
+                className="h-20 w-20 object-cover rounded-lg border border-slate-300"
+              />
+              <button
+                type="button"
+                onClick={removeLogo}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ) : (
+            <div className="h-20 w-20 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-slate-50">
+              <Upload className="h-6 w-6 text-slate-400" />
+            </div>
+          )}
+          
+          <div className="flex-1">
+            <input
+              type="file"
+              id="logo-upload"
+              accept="image/*"
+              onChange={handleLogoUpload}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => document.getElementById('logo-upload')?.click()}
+              disabled={isUploadingLogo}
+            >
+              {isUploadingLogo ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  {logoPreview ? 'Change Logo' : 'Upload Logo'}
+                </>
+              )}
+            </Button>
+            <p className="text-xs text-slate-500 mt-1">
+              Optional. JPG, PNG, WebP or GIF. Max 5MB.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Country */}
