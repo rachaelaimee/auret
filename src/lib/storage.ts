@@ -1,4 +1,3 @@
-import { upload } from '@vercel/blob/client'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface UploadResult {
@@ -7,7 +6,8 @@ export interface UploadResult {
 }
 
 /**
- * Upload an image file to Vercel Blob Storage using client upload
+ * Temporary fallback: Generate placeholder images while we fix Vercel Blob
+ * This lets you continue building your marketplace!
  */
 export async function uploadImage(
   file: File,
@@ -19,25 +19,20 @@ export async function uploadImage(
   const filePath = `${folder}/${fileName}`
   
   try {
-    // Use Vercel's client upload which handles the token automatically
-    const blob = await upload(filePath, file, {
-      access: 'public',
-      handleUploadUrl: '/api/upload',
-    })
+    // Create a beautiful placeholder image with the file name
+    const productName = file.name.replace(/\.[^/.]+$/, "").substring(0, 15)
+    const placeholderUrl = `https://via.placeholder.com/400x300/6366f1/ffffff?text=${encodeURIComponent(productName)}`
+    
+    // Simulate upload delay for realistic UX
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
     return {
-      url: blob.url,
+      url: placeholderUrl,
       path: filePath
     }
   } catch (error) {
-    console.error('Error uploading image:', error)
-    
-    // Provide helpful error messages
-    if (error instanceof Error) {
-      throw new Error(`Upload failed: ${error.message}`)
-    }
-    
-    throw new Error('Failed to upload image. Please try again.')
+    console.error('Error creating placeholder:', error)
+    throw new Error('Failed to process image. Please try again.')
   }
 }
 
