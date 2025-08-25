@@ -60,7 +60,7 @@ export function HomePage() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <Link 
-              href="/search"
+              href="/browse"
               className="bg-slate-900 text-white px-8 py-3 rounded-lg hover:bg-slate-800 transition-colors"
             >
               Start Shopping
@@ -78,12 +78,12 @@ export function HomePage() {
             <div className="mt-16">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold text-slate-900">Featured Products</h2>
-                <Link 
-                  href="/search"
-                  className="text-slate-600 hover:text-slate-900 transition-colors"
-                >
-                  View All →
-                </Link>
+                              <Link 
+                href="/browse"
+                className="text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                View All →
+              </Link>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

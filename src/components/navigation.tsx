@@ -27,7 +27,7 @@ export function Navigation({ user }: NavigationProps) {
             Auret
           </Link>
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/search" className="text-slate-600 hover:text-slate-900">
+            <Link href="/browse" className="text-slate-600 hover:text-slate-900">
               Browse
             </Link>
             <Link href="/forum" className="text-slate-600 hover:text-slate-900">
