@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { AuthProvider } from '@/components/auth/auth-provider'
-import { SearchPage } from '@/components/search/search-page'
+import { ProductDiscoveryPage } from '@/components/search/product-discovery-page'
 import { Loader2 } from 'lucide-react'
 
 export const metadata = {
@@ -8,7 +8,7 @@ export const metadata = {
   description: 'Discover amazing handmade and digital products from creators on Auret marketplace'
 }
 
-function SearchPageFallback() {
+function SearchLoadingFallback() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center">
       <div className="text-center">
@@ -19,11 +19,11 @@ function SearchPageFallback() {
   )
 }
 
-export default function Search() {
+export default function SearchProducts() {
   return (
     <AuthProvider>
-      <Suspense fallback={<SearchPageFallback />}>
-        <SearchPage />
+      <Suspense fallback={<SearchLoadingFallback />}>
+        <ProductDiscoveryPage />
       </Suspense>
     </AuthProvider>
   )

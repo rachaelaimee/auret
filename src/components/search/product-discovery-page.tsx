@@ -8,10 +8,9 @@ import { getAllActiveProducts, searchProducts, getShopById } from '@/lib/firesto
 import { ProductCard } from '@/components/product/product-card-simple'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Search, Filter, Loader2 } from 'lucide-react'
 
-export function SearchPage() {
+export function ProductDiscoveryPage() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
@@ -78,10 +77,10 @@ export function SearchPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-slate-900 mb-2">
-              {searchTerm ? `Search Results for "${searchTerm}"` : 'Discover Products'}
+              {searchTerm ? `Search Results for "${searchTerm}"` : 'Discover Amazing Products'}
             </h1>
             <p className="text-slate-600">
-              Find amazing handmade and digital products from creators
+              Find incredible handmade and digital products from talented creators
             </p>
           </div>
 
@@ -93,7 +92,7 @@ export function SearchPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
                 <Input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search for amazing products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -121,7 +120,7 @@ export function SearchPage() {
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                All
+                All Products
               </button>
               <button
                 onClick={() => setSelectedType('physical')}
@@ -131,7 +130,7 @@ export function SearchPage() {
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                Physical
+                Physical Items
               </button>
               <button
                 onClick={() => setSelectedType('digital')}
@@ -141,7 +140,7 @@ export function SearchPage() {
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                Digital
+                Digital Downloads
               </button>
             </div>
           </div>
@@ -149,7 +148,10 @@ export function SearchPage() {
           {/* Loading State */}
           {isLoading && (
             <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-slate-400 mx-auto mb-4" />
+                <p className="text-slate-600">Finding amazing products...</p>
+              </div>
             </div>
           )}
 
@@ -159,7 +161,7 @@ export function SearchPage() {
               {/* Results Count */}
               <div className="mb-6">
                 <p className="text-slate-600">
-                  {products.length} {products.length === 1 ? 'product' : 'products'} found
+                  Found {products.length} amazing {products.length === 1 ? 'product' : 'products'}
                 </p>
               </div>
 
@@ -184,8 +186,8 @@ export function SearchPage() {
                   </h3>
                   <p className="text-slate-600 mb-4">
                     {searchTerm 
-                      ? `No products match "${searchTerm}". Try different keywords.`
-                      : 'No products are currently available.'
+                      ? `No products match "${searchTerm}". Try different keywords or browse all products.`
+                      : 'No products are currently available. Check back soon for amazing new items!'
                     }
                   </p>
                   {searchTerm && (
@@ -196,7 +198,7 @@ export function SearchPage() {
                         setSelectedType('all')
                       }}
                     >
-                      Clear Search
+                      Browse All Products
                     </Button>
                   )}
                 </div>
