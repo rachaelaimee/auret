@@ -112,3 +112,4 @@ export function validateImageFile(file: File): string | null {
   
   return null // No errors
 }
+// Force deployment Mon Aug 25 10:17:52 BST 2025
