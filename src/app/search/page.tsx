@@ -4,8 +4,8 @@ import { SearchPage } from '@/components/search/search-page'
 import { Loader2 } from 'lucide-react'
 
 export const metadata = {
-  title: 'Search Products - Auret',
-  description: 'Discover amazing handmade and digital products from creators on Auret'
+  title: 'Search Products - Auret Marketplace',
+  description: 'Discover amazing handmade and digital products from creators on Auret marketplace'
 }
 
 function SearchPageFallback() {
