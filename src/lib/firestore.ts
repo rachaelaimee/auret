@@ -352,3 +352,36 @@ export async function getFeaturedProducts(limitCount: number = 12): Promise<Prod
   // Later we can add a "featured" field to products
   return getAllActiveProducts(limitCount)
 }
+
+// Get user's shop
+export async function getUserShop(userId: string): Promise<Shop | null> {
+  const shopsRef = collection(db, 'shops')
+  const q = query(shopsRef, where('ownerId', '==', userId))
+  const querySnapshot = await getDocs(q)
+  
+  if (querySnapshot.empty) {
+    return null
+  }
+  
+  const shopDoc = querySnapshot.docs[0]
+  return {
+    id: shopDoc.id,
+    ...shopDoc.data()
+  } as Shop
+}
+
+// Get all products for a shop (including drafts)
+export async function getShopProducts(shopId: string): Promise<Product[]> {
+  const productsRef = collection(db, 'products')
+  const q = query(
+    productsRef,
+    where('shopId', '==', shopId),
+    orderBy('createdAt', 'desc')
+  )
+  const querySnapshot = await getDocs(q)
+  
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Product[]
+}
