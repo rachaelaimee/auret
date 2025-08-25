@@ -9,7 +9,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const jsonResponse = await handleUpload({
       body,
       request,
-      onBeforeGenerateToken: async (pathname) => {
+      onBeforeGenerateToken: async (_pathname) => {
         // Here you can add authentication/authorization logic
         // For now, we'll allow all uploads
         return {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         console.log('Upload completed:', blob.url)
         
         try {
-          const payload = JSON.parse(tokenPayload || '{}')
+          // const payload = JSON.parse(tokenPayload || '{}')
           // Here you could save the blob info to your database
           // await saveImageToDatabase(blob.url, payload.uploadedBy)
         } catch (error) {

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function middleware(_request: NextRequest) {
   // For Firebase Auth, we'll handle authentication client-side
   // This middleware is simplified but can be extended later
   return NextResponse.next()

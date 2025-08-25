@@ -17,7 +17,7 @@ interface DashboardContentProps {
 
 export function DashboardContent({ user }: DashboardContentProps) {
   const router = useRouter()
-  const { profile, loading } = useUserProfile()
+  const { profile } = useUserProfile()
   const { shops, loading: shopsLoading } = useUserShops()
 
   const handleSignOut = async () => {
