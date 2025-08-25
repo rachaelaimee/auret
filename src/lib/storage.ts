@@ -1,4 +1,3 @@
-import { put } from '@vercel/blob'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface UploadResult {
@@ -7,7 +6,7 @@ export interface UploadResult {
 }
 
 /**
- * Upload an image file to Vercel Blob Storage
+ * Upload an image file to Vercel Blob Storage via API route
  */
 export async function uploadImage(
   file: File,
@@ -19,14 +18,26 @@ export async function uploadImage(
   const filePath = `${folder}/${fileName}`
   
   try {
-    // Upload to Vercel Blob
-    const blob = await put(filePath, file, {
-      access: 'public',
-      handleUploadUrl: '/api/upload'
+    // Create form data
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('filename', filePath)
+    
+    // Upload via our API route
+    const response = await fetch('/api/upload-blob', {
+      method: 'POST',
+      body: formData,
     })
     
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(error || 'Upload failed')
+    }
+    
+    const result = await response.json()
+    
     return {
-      url: blob.url,
+      url: result.url,
       path: filePath
     }
   } catch (error) {
