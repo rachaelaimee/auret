@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
+import { useCurrency } from '@/components/currency/currency-provider'
+import { convertAndFormatPrice } from '@/lib/currency'
 
 interface ProductCardProps {
   product: {
@@ -24,13 +26,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, shop }: ProductCardProps) {
-  const formatPrice = (priceCents: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(priceCents / 100)
-  }
-
+  const { currency } = useCurrency()
   const primaryPhoto = product.photos.find(photo => photo.order === 0) || product.photos[0]
 
   return (
@@ -72,7 +68,7 @@ export function ProductCard({ product, shop }: ProductCardProps) {
         
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-slate-900">
-            {formatPrice(product.priceCents)}
+            {convertAndFormatPrice(product.priceCents, currency)}
           </span>
           
           {/* Shop Info */}

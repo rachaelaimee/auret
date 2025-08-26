@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { logOut } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
+import { CurrencySelector } from '@/components/currency/currency-selector'
 
 interface NavigationProps {
   user: User | null
@@ -36,31 +37,35 @@ export function Navigation({ user }: NavigationProps) {
             <Link href="/sell" className="text-slate-600 hover:text-slate-900">
               Start Selling
             </Link>
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <Link href="/dashboard" className="text-slate-600 hover:text-slate-900">
-                  Dashboard
-                </Link>
-                <Link href="/profile" className="text-slate-600 hover:text-slate-900">
-                  Profile
-                </Link>
-                <span className="text-sm text-slate-600">
-                  {user.displayName || user.email}
-                </span>
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
-                  Sign Out
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link href="/auth/signin" className="text-slate-600 hover:text-slate-900">
-                  Sign In
-                </Link>
-                <Link href="/auth/signup">
-                  <Button size="sm">Sign Up</Button>
-                </Link>
-              </div>
-            )}
+            <div className="flex items-center space-x-4">
+              <CurrencySelector variant="compact" />
+              
+              {user ? (
+                <>
+                  <Link href="/dashboard" className="text-slate-600 hover:text-slate-900">
+                    Dashboard
+                  </Link>
+                  <Link href="/profile" className="text-slate-600 hover:text-slate-900">
+                    Profile
+                  </Link>
+                  <span className="text-sm text-slate-600">
+                    {user.displayName || user.email}
+                  </span>
+                  <Button variant="outline" size="sm" onClick={handleSignOut}>
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/signin" className="text-slate-600 hover:text-slate-900">
+                    Sign In
+                  </Link>
+                  <Link href="/auth/signup">
+                    <Button size="sm">Sign Up</Button>
+                  </Link>
+                </>
+              )}
+            </div>
           </nav>
         </div>
       </div>
