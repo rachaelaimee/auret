@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { ProductCard } from '@/components/product/product-card-simple'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { CurrencyMigrationTool } from './currency-migration-tool'
 import { 
   Store, 
   Plus, 
@@ -229,6 +230,12 @@ export function SellerDashboard() {
               </div>
             </div>
           </div>
+
+          {/* Currency Migration Tool */}
+          <CurrencyMigrationTool 
+            products={products} 
+            onUpdate={loadSellerData}
+          />
 
           {/* Products Management */}
           <div className="bg-white rounded-lg shadow-sm border">

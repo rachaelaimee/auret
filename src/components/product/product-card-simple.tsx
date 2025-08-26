@@ -10,6 +10,7 @@ interface ProductCardProps {
     id: string
     title: string
     priceCents: number
+    currency?: string // Optional for backward compatibility
     photos: {
       id: string
       url: string
@@ -28,6 +29,12 @@ interface ProductCardProps {
 export function ProductCard({ product, shop }: ProductCardProps) {
   const { currency } = useCurrency()
   const primaryPhoto = product.photos.find(photo => photo.order === 0) || product.photos[0]
+  
+  // Smart currency handling: use product's currency if available, otherwise assume USD for old products
+  const productCurrency = product.currency || 'USD'
+  const displayPrice = productCurrency === currency 
+    ? product.priceCents // Same currency, no conversion needed
+    : convertAndFormatPrice(product.priceCents, currency) // Convert from product currency to display currency
 
   return (
     <Link 
@@ -68,7 +75,7 @@ export function ProductCard({ product, shop }: ProductCardProps) {
         
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-slate-900">
-            {convertAndFormatPrice(product.priceCents, currency)}
+            {typeof displayPrice === 'string' ? displayPrice : convertAndFormatPrice(displayPrice, currency)}
           </span>
           
           {/* Shop Info */}
