@@ -40,15 +40,19 @@ export function ProductCard({ product, shop }: ProductCardProps) {
     >
       {/* Product Image */}
       <div className="aspect-square bg-slate-100 relative overflow-hidden">
-        {primaryPhoto ? (
+        {primaryPhoto && !primaryPhoto.url.startsWith('blob:') ? (
           <img
             src={primaryPhoto.url}
             alt={primaryPhoto.alt || product.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            onError={(e) => {
+              console.warn('Failed to load image:', primaryPhoto.url)
+              e.currentTarget.style.display = 'none'
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-400">
-            No Image
+            {primaryPhoto?.url.startsWith('blob:') ? 'Image Loading...' : 'No Image'}
           </div>
         )}
         
