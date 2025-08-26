@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Shop } from '@/lib/firestore'
+import { useCurrency } from '@/components/currency/currency-provider'
+import { SUPPORTED_CURRENCIES } from '@/lib/currency'
 
 // Shop with converted dates for client component
 type ShopWithDates = Omit<Shop, 'createdAt' | 'updatedAt'> & {
@@ -25,6 +27,7 @@ interface ShopPageProps {
 export function ShopPage({ shop }: ShopPageProps) {
   const { user, profile } = useUserProfile()
   const { products, loading: productsLoading } = useShopProducts(shop.id, !user || user.uid !== shop.ownerId)
+  const { currency } = useCurrency()
   const [isOwner, setIsOwner] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -180,7 +183,9 @@ export function ShopPage({ shop }: ShopPageProps) {
                   </div>
                   <div>
                     <h4 className="font-medium text-slate-900 mb-1">Currency</h4>
-                    <p className="text-sm text-slate-600">{shop.currency}</p>
+                    <p className="text-sm text-slate-600">
+                      {SUPPORTED_CURRENCIES[currency].flag} {currency}
+                    </p>
                   </div>
                   {shop.country && (
                     <div>
