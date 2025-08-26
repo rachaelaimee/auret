@@ -13,7 +13,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Upload, X, Plus } from 'lucide-react'
+import { useCurrency } from '@/components/currency/currency-provider'
+import { SUPPORTED_CURRENCIES, Currency } from '@/lib/currency'
 
 // Shop type (simplified for form use)
 type Shop = {
@@ -32,6 +35,7 @@ const productCreateSchema = z.object({
     .max(2000, 'Description must be less than 2000 characters'),
   price: z.string()
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, 'Price must be a valid positive number'),
+  currency: z.enum(['GBP', 'USD', 'EUR', 'CAD', 'AUD']),
   type: z.enum(['digital', 'physical']),
   status: z.enum(['draft', 'active']),
   inventory: z.string().optional(),
@@ -52,6 +56,7 @@ interface ProductCreateFormProps {
 
 export function ProductCreateForm({ shop }: ProductCreateFormProps) {
   const router = useRouter()
+  const { currency: userCurrency } = useCurrency()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [photos, setPhotos] = useState<{ id: string; url: string; alt?: string; path?: string }[]>([])
@@ -67,7 +72,8 @@ export function ProductCreateForm({ shop }: ProductCreateFormProps) {
     resolver: zodResolver(productCreateSchema),
     defaultValues: {
       type: 'physical',
-      status: 'draft'
+      status: 'draft',
+      currency: userCurrency // Smart default to user's preferred currency
     }
   })
 
@@ -142,6 +148,7 @@ export function ProductCreateForm({ shop }: ProductCreateFormProps) {
         title: data.title,
         description: data.description,
         priceCents,
+        currency: data.currency,
         type: data.type,
         status: data.status,
         photos: photos.map((photo, index) => ({
@@ -217,19 +224,47 @@ export function ProductCreateForm({ shop }: ProductCreateFormProps) {
             )}
           </div>
 
-          <div>
-            <Label htmlFor="price">Price ($) *</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              min="0"
-              {...register('price')}
-              placeholder="29.99"
-            />
-            {errors.price && (
-              <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <Label htmlFor="price">Price *</Label>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                min="0"
+                {...register('price')}
+                placeholder="29.99"
+              />
+              {errors.price && (
+                <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
+              )}
+            </div>
+            
+            <div>
+              <Label htmlFor="currency">Currency *</Label>
+              <Select 
+                value={watch('currency')} 
+                onValueChange={(value: Currency) => setValue('currency', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(SUPPORTED_CURRENCIES).map((currencyInfo) => (
+                    <SelectItem key={currencyInfo.code} value={currencyInfo.code}>
+                      <div className="flex items-center gap-2">
+                        <span>{currencyInfo.flag}</span>
+                        <span>{currencyInfo.code}</span>
+                        <span className="text-slate-500">({currencyInfo.symbol})</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.currency && (
+                <p className="text-sm text-red-600 mt-1">{errors.currency.message}</p>
+              )}
+            </div>
           </div>
 
           <div>

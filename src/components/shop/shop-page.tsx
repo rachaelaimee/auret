@@ -108,7 +108,7 @@ export function ShopPage({ shop }: ShopPageProps) {
                 {shop.status}
               </Badge>
               <Badge variant="outline">
-                {shop.currency}
+                {SUPPORTED_CURRENCIES[currency].flag} {currency}
               </Badge>
             </div>
 
