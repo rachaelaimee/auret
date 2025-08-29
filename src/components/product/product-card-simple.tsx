@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { useCurrency } from '@/components/currency/currency-provider'
 import { convertAndFormatPrice } from '@/lib/currency'
+import { AddToCartButton } from '@/components/cart/add-to-cart-button'
 
 interface ProductCardProps {
   product: {
@@ -20,6 +21,7 @@ interface ProductCardProps {
     type: 'digital' | 'physical'
   }
   shop: {
+    id?: string
     handle: string
     name: string
     logoUrl?: string
@@ -73,25 +75,41 @@ export function ProductCard({ product, shop }: ProductCardProps) {
           {product.title}
         </h3>
         
-        <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-slate-900">
-            {typeof displayPrice === 'string' ? displayPrice : convertAndFormatPrice(displayPrice, currency)}
-          </span>
-          
-          {/* Shop Info */}
-          <div className="flex items-center gap-2">
-            {shop.logoUrl ? (
-              <img
-                src={shop.logoUrl}
-                alt={`${shop.name} logo`}
-                className="w-5 h-5 rounded object-cover"
-              />
-            ) : (
-              <div className="w-5 h-5 rounded bg-gradient-to-br from-blue-500 to-purple-600"></div>
-            )}
-            <span className="text-sm text-slate-600 truncate max-w-[80px]">
-              {shop.name}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-slate-900">
+              {typeof displayPrice === 'string' ? displayPrice : convertAndFormatPrice(displayPrice, currency)}
             </span>
+            
+            {/* Shop Info */}
+            <div className="flex items-center gap-2">
+              {shop.logoUrl ? (
+                <img
+                  src={shop.logoUrl}
+                  alt={`${shop.name} logo`}
+                  className="w-5 h-5 rounded object-cover"
+                />
+              ) : (
+                <div className="w-5 h-5 rounded bg-gradient-to-br from-blue-500 to-purple-600"></div>
+              )}
+              <span className="text-sm text-slate-600 truncate max-w-[80px]">
+                {shop.name}
+              </span>
+            </div>
+          </div>
+
+          {/* Add to Cart Button */}
+          <div onClick={(e) => e.preventDefault()} className="relative z-10">
+            <AddToCartButton
+              product={product}
+              shop={{
+                id: shop.id || '',
+                name: shop.name,
+                handle: shop.handle
+              }}
+              variant="compact"
+              className="w-full"
+            />
           </div>
         </div>
       </div>

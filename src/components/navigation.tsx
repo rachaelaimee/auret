@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { logOut } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { CurrencySelector } from '@/components/currency/currency-selector'
+import { CartIcon } from '@/components/cart/cart-icon'
 
 interface NavigationProps {
   user: User | null
@@ -39,6 +40,7 @@ export function Navigation({ user }: NavigationProps) {
             </Link>
             <div className="flex items-center space-x-4">
               <CurrencySelector variant="compact" />
+              <CartIcon />
               
               {user ? (
                 <>
