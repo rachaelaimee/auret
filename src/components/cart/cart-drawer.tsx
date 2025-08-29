@@ -168,7 +168,7 @@ export function CartDrawer() {
 
               {/* Action Buttons */}
               <div className="space-y-2">
-                <Link href="/checkout" onClick={() => setIsOpen(false)}>
+                <Link href="/checkout" onClick={() => setIsOpen(false)} className="block">
                   <Button size="lg" className="w-full">
                     Proceed to Checkout
                   </Button>
