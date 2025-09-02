@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Navigation } from '@/components/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
-import { getUserShop, getShopProducts, updateProduct } from '@/lib/firestore'
+import { getUserShop, getProductsByShop, updateProduct, Product, Shop } from '@/lib/firestore'
 import { Button } from '@/components/ui/button'
 import { ProductCard } from '@/components/product/product-card-simple'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -22,26 +22,9 @@ import {
   TrendingUp,
   DollarSign
 } from 'lucide-react'
+import Image from 'next/image'
 
-interface Shop {
-  id: string
-  handle: string
-  name: string
-  description: string
-  logoUrl?: string
-}
-
-interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  status: 'draft' | 'active'
-  type: 'physical' | 'digital'
-  photos: Array<{ url: string; alt: string }>
-  createdAt: any
-  shopId: string
-}
+// Using imported types from firestore
 
 export function SellerDashboard() {
   const { user } = useAuth()
@@ -51,13 +34,7 @@ export function SellerDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (user) {
-      loadSellerData()
-    }
-  }, [user])
-
-  const loadSellerData = async () => {
+  const loadSellerData = useCallback(async () => {
     if (!user) return
     
     setIsLoading(true)
@@ -68,15 +45,27 @@ export function SellerDashboard() {
 
       // If shop exists, get products
       if (userShop) {
-        const shopProducts = await getShopProducts(userShop.id)
-        setProducts(shopProducts)
+        const shopProducts = await getProductsByShop(userShop.id)
+        // Sort by createdAt descending on client side to avoid index requirement
+        const sortedProducts = shopProducts.sort((a, b) => {
+          const aTime = a.createdAt?.toMillis?.() || 0
+          const bTime = b.createdAt?.toMillis?.() || 0
+          return bTime - aTime
+        })
+        setProducts(sortedProducts)
       }
     } catch (error) {
       console.error('Error loading seller data:', error)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (user) {
+      loadSellerData()
+    }
+  }, [user, loadSellerData])
 
   const toggleProductStatus = async (productId: string, currentStatus: string) => {
     setIsUpdating(productId)
@@ -141,7 +130,7 @@ export function SellerDashboard() {
             </p>
             
             <div className="bg-white rounded-lg shadow-sm border p-8 mb-8">
-              <h2 className="text-xl font-semibold mb-4">What you'll get:</h2>
+              <h2 className="text-xl font-semibold mb-4">What you&apos;ll get:</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                 <div className="flex items-start gap-3">
                   <ShoppingBag className="h-5 w-5 text-green-500 mt-1" />
@@ -204,11 +193,15 @@ export function SellerDashboard() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {shop.logoUrl && (
-                  <img 
-                    src={shop.logoUrl} 
-                    alt={shop.name} 
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
+                  <div className="relative h-12 w-12 rounded-full overflow-hidden">
+                    <Image 
+                      src={shop.logoUrl} 
+                      alt={shop.name} 
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                    />
+                  </div>
                 )}
                 <div>
                   <h1 className="text-2xl font-bold text-slate-900">{shop.name}</h1>
@@ -323,10 +316,7 @@ function ProductList({
       {products.map((product) => (
         <div key={product.id} className="relative">
           <ProductCard 
-            product={{
-              ...product,
-              priceCents: product.price * 100 // Convert to cents for display
-            }} 
+            product={product}
             shop={{ handle: shopHandle, name: '', logoUrl: '' }}
           />
           
