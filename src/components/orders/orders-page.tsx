@@ -47,13 +47,18 @@ interface Order {
 }
 
 export function OrdersPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Don't redirect if auth is still loading
+    if (authLoading) {
+      return
+    }
+    
     if (!user) {
       router.push('/auth/signin?redirect=/orders')
       return
@@ -78,7 +83,7 @@ export function OrdersPage() {
     }
 
     loadOrders()
-  }, [user, router])
+  }, [user, router, authLoading])
 
   const formatPrice = (cents: number, currency: string = 'GBP') => {
     return new Intl.NumberFormat('en-GB', {
@@ -117,6 +122,17 @@ export function OrdersPage() {
       default:
         return 'secondary'
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400 mx-auto mb-4" />
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!user) {

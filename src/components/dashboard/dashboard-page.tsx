@@ -11,7 +11,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/auth/signin')
+      router.push('/auth/signin?redirect=/dashboard')
     }
   }, [user, loading, router])
 
