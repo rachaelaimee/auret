@@ -205,7 +205,8 @@ export function ProductEditForm({ product, shop }: ProductEditFormProps) {
             return {
               id: `photo-${Date.now()}-${index}`,
               url: result.url,
-              order: photo.order
+              order: photo.order,
+              ...(photo.alt && { alt: photo.alt }) // Only include alt if it has a value
             }
           })
           
@@ -225,7 +226,7 @@ export function ProductEditForm({ product, shop }: ProductEditFormProps) {
         .map(photo => ({
           id: photo.id,
           url: photo.url,
-          alt: photo.alt,
+          ...(photo.alt && { alt: photo.alt }), // Only include alt if it has a value
           order: photo.order
         }))
 
@@ -263,7 +264,7 @@ export function ProductEditForm({ product, shop }: ProductEditFormProps) {
       }
 
       if (data.dimensions && (data.dimensions.length || data.dimensions.width || data.dimensions.height)) {
-        const dimensions: any = {}
+        const dimensions: Record<string, number> = {}
         if (data.dimensions.length && data.dimensions.length.trim() !== '') {
           const length = parseFloat(data.dimensions.length)
           if (!isNaN(length) && length > 0) dimensions.length = length
