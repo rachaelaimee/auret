@@ -264,8 +264,14 @@ export async function getProductsByShop(shopId: string): Promise<Product[]> {
 
 export async function updateProduct(productId: string, updates: Partial<Product>) {
   const productRef = doc(db, 'products', productId)
+  
+  // Filter out undefined values to prevent Firestore errors
+  const cleanedUpdates = Object.fromEntries(
+    Object.entries(updates).filter(([_, value]) => value !== undefined)
+  )
+  
   const updateData = {
-    ...updates,
+    ...cleanedUpdates,
     updatedAt: serverTimestamp()
   }
   
