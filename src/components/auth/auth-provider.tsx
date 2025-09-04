@@ -27,31 +27,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let isMounted = true
-
     const unsubscribe = onAuthChange((user) => {
-      if (isMounted) {
-        setUser(user)
-        setLoading(false)
-      }
+      setUser(user)
+      setLoading(false)
     })
 
-    // Also handle initial auth state check
-    const checkInitialAuth = async () => {
-      // Give Firebase a moment to restore auth state from persistence
-      await new Promise(resolve => setTimeout(resolve, 100))
-      if (isMounted) {
-        // Trigger auth state check if still needed
-        setLoading(false)
-      }
-    }
-
-    checkInitialAuth()
-
-    return () => {
-      isMounted = false
-      unsubscribe()
-    }
+    return unsubscribe
   }, [])
 
   return (

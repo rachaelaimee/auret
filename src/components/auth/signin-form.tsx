@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -23,6 +23,7 @@ export function SignInForm() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const {
     register,
@@ -38,7 +39,8 @@ export function SignInForm() {
 
     try {
       await signIn(data.email, data.password)
-      router.push('/dashboard')
+      const redirectTo = searchParams.get('redirect') || '/dashboard'
+      router.push(redirectTo)
       router.refresh()
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred. Please try again.')
