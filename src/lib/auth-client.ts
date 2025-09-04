@@ -30,18 +30,11 @@ export const logOut = async () => {
 }
 
 export const onAuthChange = (callback: (user: User | null) => void) => {
-  console.log('Auth-client: Setting up onAuthStateChanged listener')
-  
   return onAuthStateChanged(auth, (user) => {
-    console.log('Auth-client: onAuthStateChanged fired', { 
-      user: user ? { uid: user.uid, email: user.email } : null,
-      currentUser: auth.currentUser ? { uid: auth.currentUser.uid, email: auth.currentUser.email } : null
-    })
-    
     // Handle token refresh errors gracefully
     if (user) {
       user.getIdToken(true).catch((error) => {
-        console.warn('Auth-client: Token refresh failed, but user is still authenticated:', error)
+        console.warn('Token refresh failed, but user is still authenticated:', error)
         // Don't sign out the user for token refresh failures
       })
     }
