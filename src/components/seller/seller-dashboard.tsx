@@ -65,7 +65,7 @@ export function SellerDashboard() {
     if (user) {
       loadSellerData()
     }
-  }, [user, loadSellerData])
+  }, [user])
 
   const toggleProductStatus = async (productId: string, currentStatus: string) => {
     setIsUpdating(productId)
