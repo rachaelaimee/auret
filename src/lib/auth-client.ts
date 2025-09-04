@@ -30,5 +30,14 @@ export const logOut = async () => {
 }
 
 export const onAuthChange = (callback: (user: User | null) => void) => {
-  return onAuthStateChanged(auth, callback)
+  return onAuthStateChanged(auth, (user) => {
+    // Handle token refresh errors gracefully
+    if (user) {
+      user.getIdToken(true).catch((error) => {
+        console.warn('Token refresh failed, but user is still authenticated:', error)
+        // Don't sign out the user for token refresh failures
+      })
+    }
+    callback(user)
+  })
 }
