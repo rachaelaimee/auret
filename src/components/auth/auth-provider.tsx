@@ -25,25 +25,30 @@ export const useAuth = () => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [initialLoad, setInitialLoad] = useState(true)
 
   useEffect(() => {
+    console.log('AuthProvider: Setting up auth listener')
+    
     const unsubscribe = onAuthChange((user) => {
-      setUser(user)
+      console.log('AuthProvider: Auth state changed', { 
+        user: user ? { uid: user.uid, email: user.email } : null,
+        loading 
+      })
       
-      // On initial load, give Firebase a moment to restore auth state
-      if (initialLoad) {
-        setTimeout(() => {
-          setLoading(false)
-          setInitialLoad(false)
-        }, 100)
-      } else {
-        setLoading(false)
-      }
+      setUser(user)
+      setLoading(false)
     })
 
-    return unsubscribe
-  }, [initialLoad])
+    return () => {
+      console.log('AuthProvider: Cleaning up auth listener')
+      unsubscribe()
+    }
+  }, [])
+
+  console.log('AuthProvider: Rendering', { 
+    user: user ? { uid: user.uid, email: user.email } : null, 
+    loading 
+  })
 
   return (
     <AuthContext.Provider value={{ user, loading }}>

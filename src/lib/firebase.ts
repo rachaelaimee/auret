@@ -21,12 +21,14 @@ const storage = getStorage(app)
 
 // Set up auth persistence (only on client side)
 if (typeof window !== 'undefined') {
+  console.log('Firebase: Setting up auth persistence')
   setPersistence(auth, browserLocalPersistence)
     .then(() => {
-      console.log('Firebase auth persistence set to browserLocalPersistence')
+      console.log('Firebase: Auth persistence set to browserLocalPersistence')
+      console.log('Firebase: Current user on init:', auth.currentUser)
     })
     .catch((error) => {
-      console.error('Failed to set auth persistence:', error)
+      console.error('Firebase: Failed to set auth persistence:', error)
       // Continue anyway - Firebase will use default persistence
     })
 }
