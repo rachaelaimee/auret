@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { SignInForm } from '@/components/auth/signin-form'
 
 export const metadata: Metadata = {
@@ -25,7 +26,13 @@ export default function SignInPage() {
             </p>
           </div>
 
-          <SignInForm />
+          <Suspense fallback={
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
+            </div>
+          }>
+            <SignInForm />
+          </Suspense>
 
           <div className="mt-8 text-center text-sm">
             <span className="text-slate-600">Don't have an account? </span>
