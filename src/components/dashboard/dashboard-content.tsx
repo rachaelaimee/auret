@@ -98,23 +98,25 @@ export function DashboardContent({ user }: DashboardContentProps) {
                   ) : (
                     <div className="space-y-3">
                       {shops.map((shop) => (
-                        <div key={shop.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                              <Store className="h-5 w-5 text-white" />
+                        <div key={shop.id} className="p-3 border rounded-lg">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center space-x-3 min-w-0 flex-1">
+                              <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Store className="h-5 w-5 text-white" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-medium text-slate-900 truncate">{shop.name}</h4>
+                                <p className="text-sm text-slate-600 truncate">@{shop.handle}</p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-medium text-slate-900">{shop.name}</h4>
-                              <p className="text-sm text-slate-600">@{shop.handle}</p>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Badge variant={shop.status === 'active' ? 'default' : 'secondary'}>
+                                {shop.status}
+                              </Badge>
+                              <Link href={`/shop/${shop.handle}`}>
+                                <Button size="sm" variant="outline">View</Button>
+                              </Link>
                             </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant={shop.status === 'active' ? 'default' : 'secondary'}>
-                              {shop.status}
-                            </Badge>
-                            <Link href={`/shop/${shop.handle}`}>
-                              <Button size="sm" variant="outline">View</Button>
-                            </Link>
                           </div>
                         </div>
                       ))}
