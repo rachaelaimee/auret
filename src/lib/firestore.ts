@@ -52,6 +52,18 @@ export interface Shop {
     returns?: string
     privacy?: string
   }
+  shippingRates?: {
+    domestic: {
+      enabled: boolean
+      rate: number // in cents
+      freeThreshold?: number // free shipping over this amount in cents
+    }
+    international: {
+      enabled: boolean
+      rate: number // in cents
+      freeThreshold?: number
+    }
+  }
 }
 
 export interface ProductPhoto {
