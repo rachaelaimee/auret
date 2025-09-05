@@ -61,7 +61,7 @@ export class EmailService {
   async sendOrderConfirmation(order: Order): Promise<void> {
     try {
       const { data, error } = await getResend().emails.send({
-        from: 'Auret <orders@auret.shop>',
+        from: 'Auret <onboarding@resend.dev>',
         to: [order.customerEmail],
         subject: `Order Confirmation #${order.id.slice(-8)} - Thank you for your purchase!`,
         html: this.generateOrderConfirmationHTML(order),
@@ -82,7 +82,7 @@ export class EmailService {
   async sendSellerNotification(order: Order, shop: Shop): Promise<void> {
     try {
       const { data, error } = await getResend().emails.send({
-        from: 'Auret <notifications@auret.shop>',
+        from: 'Auret <onboarding@resend.dev>',
         to: [shop.ownerEmail],
         subject: `New Order #${order.id.slice(-8)} for ${shop.name}!`,
         html: this.generateSellerNotificationHTML(order, shop),
