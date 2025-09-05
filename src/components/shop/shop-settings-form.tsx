@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -40,7 +40,14 @@ export function ShopSettingsForm({ shop }: ShopSettingsFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [logoFile, setLogoFile] = useState<File | null>(null)
-  const [logoPreview, setLogoPreview] = useState<string | null>(shop.logoUrl || null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(() => {
+    // Only use shop.logoUrl if it's a valid HTTP(S) URL, not a blob URL
+    const logoUrl = shop.logoUrl
+    if (logoUrl && (logoUrl.startsWith('http://') || logoUrl.startsWith('https://'))) {
+      return logoUrl
+    }
+    return null
+  })
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [logoChanged, setLogoChanged] = useState(false)
 
@@ -56,6 +63,15 @@ export function ShopSettingsForm({ shop }: ShopSettingsFormProps) {
       country: shop.country || ''
     }
   })
+
+  // Clean up blob URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      if (logoPreview && logoPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(logoPreview)
+      }
+    }
+  }, [logoPreview])
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
