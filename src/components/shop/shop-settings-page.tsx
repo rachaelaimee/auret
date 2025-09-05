@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ArrowLeft, Save } from 'lucide-react'
 import { Shop } from '@/lib/firestore'
 import { ShopSettingsForm } from '@/components/shop/shop-settings-form'
+import { ShippingSettings } from '@/components/shop/shipping-settings'
 
 interface ShopSettingsPageProps {
   shop: Shop & {
@@ -86,18 +87,22 @@ export function ShopSettingsPage({ shop }: ShopSettingsPageProps) {
             </Button>
           </div>
 
-          {/* Settings Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Shop Information</CardTitle>
-              <CardDescription>
-                Update your shop's basic information, logo, and description.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ShopSettingsForm shop={shop} />
-            </CardContent>
-          </Card>
+          {/* Settings Forms */}
+          <div className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Shop Information</CardTitle>
+                <CardDescription>
+                  Update your shop's basic information, logo, and description.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ShopSettingsForm shop={shop} />
+              </CardContent>
+            </Card>
+
+            <ShippingSettings shop={shop} />
+          </div>
         </div>
       </main>
     </div>
