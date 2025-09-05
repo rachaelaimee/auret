@@ -11,6 +11,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import { Shop } from '@/lib/firestore'
 import { ShopSettingsForm } from '@/components/shop/shop-settings-form'
 import { ShippingSettings } from '@/components/shop/shipping-settings'
+import { ShippingTiers } from '@/components/shop/shipping-tiers'
 
 interface ShopSettingsPageProps {
   shop: Shop & {
@@ -102,6 +103,8 @@ export function ShopSettingsPage({ shop }: ShopSettingsPageProps) {
             </Card>
 
             <ShippingSettings shop={shop} />
+            
+            <ShippingTiers shop={shop} />
           </div>
         </div>
       </main>

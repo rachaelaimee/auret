@@ -64,6 +64,20 @@ export interface Shop {
       freeThreshold?: number
     }
   }
+  shippingTiers?: {
+    id: string
+    name: string // e.g., "Prints", "Small Parcels", "Large Items"
+    description?: string // e.g., "Documents, prints, and flat items"
+    domesticRate: number // in cents
+    internationalRate: number // in cents
+    enabled: boolean
+    maxWeight?: number // in grams (optional)
+    maxDimensions?: { // in cm (optional)
+      length: number
+      width: number
+      height: number
+    }
+  }[]
 }
 
 export interface ProductPhoto {
@@ -102,6 +116,7 @@ export interface Product {
     width: number
     height: number
   }
+  shippingTierId?: string // which shipping tier this product uses
   digitalFiles?: {
     name: string
     url: string
