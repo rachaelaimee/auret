@@ -60,7 +60,7 @@ function StripeTestForm() {
           shippingData: {
             shippingFirstName: 'Test',
             shippingLastName: 'User',
-            shippingEmail: 'test@example.com',
+            shippingEmail: 'ivytenebrae1@gmail.com',
             shippingPhone: '07123456789',
             shippingAddress1: '123 Test Street',
             shippingCity: 'London',
@@ -85,7 +85,7 @@ function StripeTestForm() {
           card: cardElement,
           billing_details: {
             name: 'Test User',
-            email: 'test@example.com',
+            email: 'ivytenebrae1@gmail.com',
           }
         }
       })
