@@ -21,7 +21,7 @@ interface ProductCardProps {
     type: 'digital' | 'physical'
   }
   shop: {
-    id?: string
+    id: string  // Required for cart functionality
     handle: string
     name: string
     logoUrl?: string
@@ -103,7 +103,7 @@ export function ProductCard({ product, shop }: ProductCardProps) {
             <AddToCartButton
               product={product}
               shop={{
-                id: shop.id || '',
+                id: shop.id,  // Now required, no fallback to empty string
                 name: shop.name,
                 handle: shop.handle
               }}

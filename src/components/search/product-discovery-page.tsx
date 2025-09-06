@@ -84,6 +84,7 @@ export function ProductDiscoveryPage() {
           return {
             ...product,
             shop: shop ? {
+              id: shop.id,  // ✅ Include shop ID for cart functionality
               handle: shop.handle,
               name: shop.name,
               logoUrl: shop.logoUrl
