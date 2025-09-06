@@ -108,8 +108,8 @@ export function CheckoutPage() {
     }
   }, [mounted, items, currentOrder])
 
-  // Redirect if cart is empty
-  if (mounted && items.length === 0) {
+  // Redirect if cart is empty (but not if we're showing success page)
+  if (mounted && items.length === 0 && currentStep !== 'success') {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
         <Navigation user={user} />
@@ -328,6 +328,7 @@ export function CheckoutPage() {
           {currentStep === 'success' && (
             <Card>
               <CardContent className="text-center py-12">
+                {console.log('🎯 SUCCESS PAGE RENDERING - Current Step:', currentStep, 'Order Confirmation:', orderConfirmation)}
                 <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-6" />
                 <h2 className="text-2xl font-bold text-slate-900 mb-4">Order Confirmed!</h2>
                 <p className="text-slate-600 mb-6">
