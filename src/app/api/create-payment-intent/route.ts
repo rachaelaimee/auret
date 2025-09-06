@@ -10,6 +10,20 @@ export async function POST(request: NextRequest) {
   try {
     const { orderData, shippingData, currency, userId } = await request.json()
 
+    // Debug: Log the order data to see what we're receiving
+    console.log('Creating payment intent for order:', {
+      userId,
+      currency,
+      itemCount: orderData.items?.length,
+      items: orderData.items?.map((item: any) => ({
+        productId: item.productId,
+        title: item.title,
+        shopId: item.shopId,
+        shopName: item.shopName,
+        type: item.type
+      }))
+    })
+
     // Calculate the total amount in cents (Stripe requires amounts in smallest currency unit)
     const amount = Math.round(orderData.total * 100)
 

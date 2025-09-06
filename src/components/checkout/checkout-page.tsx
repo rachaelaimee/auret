@@ -95,8 +95,10 @@ export function CheckoutPage() {
   // Debug: Log cart items to see shop data
   useEffect(() => {
     if (mounted && items.length > 0) {
-      console.log('Cart items in checkout:', items)
-      console.log('Current order:', currentOrder)
+      console.log('=== CART DEBUG ===')
+      console.log('Cart items:', JSON.stringify(items, null, 2))
+      console.log('Current order:', JSON.stringify(currentOrder, null, 2))
+      console.log('=================')
     }
   }, [mounted, items, currentOrder])
 
