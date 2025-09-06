@@ -60,6 +60,11 @@ export async function POST(request: NextRequest) {
         await handlePaymentIntentRequiresAction(event.data.object as Stripe.PaymentIntent)
         break
 
+      case 'payment_intent.created':
+        // Just log for now - don't create orders on creation, wait for success
+        console.log('Payment intent created:', event.data.object.id)
+        break
+
       default:
         console.log(`Unhandled event type: ${event.type}`)
     }
@@ -99,10 +104,11 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
 
     // Group items by shop since each order belongs to one shop
     const itemsByShop = orderItemsData.reduce((groups: any, item: any) => {
-      if (!groups[item.shopId]) {
-        groups[item.shopId] = []
+      const shopId = item.shopId || 'default-shop'
+      if (!groups[shopId]) {
+        groups[shopId] = []
       }
-      groups[item.shopId].push(item)
+      groups[shopId].push(item)
       return groups
     }, {})
 
