@@ -418,3 +418,104 @@ export async function getShopProducts(shopId: string): Promise<Product[]> {
     ...doc.data()
   })) as Product[]
 }
+
+// Order Types and Functions
+export interface OrderItem {
+  id: string
+  productId: string
+  title: string
+  type: 'digital' | 'physical'
+  quantity: number
+  unitPriceCents: number
+  shopId: string
+  shopName: string
+  shopHandle: string
+  variantId?: string
+}
+
+export interface Order {
+  id: string
+  buyerId: string
+  totalCents: number
+  currency: string
+  status: 'pending' | 'paid' | 'fulfilled' | 'completed' | 'refunded' | 'disputed'
+  items: OrderItem[]
+  shippingAddress?: {
+    name: string
+    line1: string
+    line2?: string
+    city: string
+    state: string
+    postal_code: string
+    country: string
+  }
+  stripePaymentIntentId?: string
+  createdAt: Timestamp
+  updatedAt: Timestamp
+}
+
+// Create a new order
+export async function createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) {
+  const ordersRef = collection(db, 'orders')
+  const now = serverTimestamp()
+  
+  const order = {
+    ...orderData,
+    createdAt: now,
+    updatedAt: now
+  }
+  
+  const docRef = await addDoc(ordersRef, order)
+  return { id: docRef.id, ...order }
+}
+
+// Get orders for a user (buyer)
+export async function getUserOrders(userId: string): Promise<Order[]> {
+  const ordersRef = collection(db, 'orders')
+  const q = query(
+    ordersRef,
+    where('buyerId', '==', userId),
+    orderBy('createdAt', 'desc')
+  )
+  const querySnapshot = await getDocs(q)
+  
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Order[]
+}
+
+// Get a specific order
+export async function getOrder(orderId: string): Promise<Order | null> {
+  const orderRef = doc(db, 'orders', orderId)
+  const orderSnap = await getDoc(orderRef)
+  
+  if (orderSnap.exists()) {
+    return { id: orderSnap.id, ...orderSnap.data() } as Order
+  }
+  
+  return null
+}
+
+// Update order status
+export async function updateOrderStatus(orderId: string, status: Order['status']) {
+  const orderRef = doc(db, 'orders', orderId)
+  await updateDoc(orderRef, {
+    status,
+    updatedAt: serverTimestamp()
+  })
+}
+
+// Get orders for a shop (seller)
+export async function getShopOrders(shopId: string): Promise<Order[]> {
+  const ordersRef = collection(db, 'orders')
+  const querySnapshot = await getDocs(ordersRef)
+  
+  // Filter orders that contain items from this shop
+  const shopOrders = querySnapshot.docs
+    .map(doc => ({ id: doc.id, ...doc.data() } as Order))
+    .filter(order => order.items.some(item => item.shopId === shopId))
+    .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds)
+  
+  return shopOrders
+}

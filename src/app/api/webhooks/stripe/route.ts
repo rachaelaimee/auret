@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { db } from '@/lib/db'
-import { webhooks, orders, orderItems, users } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { createOrderAdmin } from '@/lib/firestore-admin'
 import { processOrderCompletion } from '@/lib/order-processing'
 
 // Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-06-20',
+  apiVersion: '2023-10-16',
 })
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ''
@@ -41,15 +39,8 @@ export async function POST(request: NextRequest) {
   console.log(`Received Stripe webhook: ${event.type}`)
 
   try {
-    // Store webhook in database for tracking
-    await db.insert(webhooks).values({
-      provider: 'stripe',
-      eventType: event.type,
-      payload: event as any,
-      status: 'pending',
-      attempts: 1,
-      lastAttemptAt: new Date(),
-    })
+    // Log the webhook event (removed database tracking for now)
+    console.log(`Processing Stripe webhook: ${event.type}`)
 
     // Handle the event
     switch (event.type) {
@@ -73,33 +64,10 @@ export async function POST(request: NextRequest) {
         console.log(`Unhandled event type: ${event.type}`)
     }
 
-    // Update webhook status to processed
-    await db
-      .update(webhooks)
-      .set({
-        status: 'processed',
-        processedAt: new Date(),
-      })
-      .where(eq(webhooks.payload, event as any))
-
     return NextResponse.json({ received: true })
 
   } catch (error: any) {
     console.error('Error processing webhook:', error)
-
-    // Update webhook status to failed
-    try {
-      await db
-        .update(webhooks)
-        .set({
-          status: 'failed',
-          error: error.message,
-          lastAttemptAt: new Date(),
-        })
-        .where(eq(webhooks.payload, event as any))
-    } catch (dbError) {
-      console.error('Error updating webhook status:', dbError)
-    }
 
     return NextResponse.json(
       { error: 'Webhook processing failed' },
@@ -144,31 +112,28 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
       const items = shopItems as any[]
       const shopTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
       
-      const [order] = await db
-        .insert(orders)
-        .values({
-          buyerId: userId,
-          shopId: shopId,
-          totalCents: Math.round(shopTotal * 100), // Convert to cents
-          currency: paymentIntent.currency.toUpperCase(),
-          status: 'confirmed',
-          stripePaymentIntentId: paymentIntent.id,
-          shippingAddress: shippingAddress,
-        })
-        .returning()
+      // Create order in Firestore using Admin SDK
+      const order = await createOrderAdmin({
+        buyerId: userId,
+        totalCents: Math.round(shopTotal * 100), // Convert to cents
+        currency: paymentIntent.currency.toUpperCase(),
+        status: 'paid',
+        stripePaymentIntentId: paymentIntent.id,
+        shippingAddress: shippingAddress,
+        items: items.map((item: any) => ({
+          id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          productId: item.productId,
+          title: item.title,
+          type: item.type,
+          quantity: item.quantity,
+          unitPriceCents: Math.round(item.price * 100), // Convert to cents
+          shopId: item.shopId,
+          shopName: item.shopName || 'Unknown Shop',
+          shopHandle: item.shopHandle || '',
+          variantId: item.variantId || undefined,
+        }))
+      })
 
-      // Create order items for this shop
-      const orderItemsToInsert = items.map((item: any) => ({
-        orderId: order.id,
-        productId: item.productId,
-        variantId: item.variantId || null,
-        titleSnapshot: item.title,
-        unitPriceCents: Math.round(item.price * 100), // Convert to cents
-        qty: item.quantity,
-        type: item.type,
-      }))
-
-      await db.insert(orderItems).values(orderItemsToInsert)
       createdOrders.push(order)
     }
 
@@ -194,24 +159,13 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   console.log('Processing failed payment:', paymentIntent.id)
 
   try {
-    // Check if order exists and update status
-    const existingOrders = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.stripePaymentIntentId, paymentIntent.id))
-      .limit(1)
+    // For now, just log the failure
+    // In a complete implementation, you'd query Firestore for orders with this payment intent ID
+    // and update their status to 'failed'
+    console.log('Payment failed for payment intent:', paymentIntent.id)
 
-    if (existingOrders.length > 0) {
-      await db
-        .update(orders)
-        .set({
-          status: 'payment_failed',
-        })
-        .where(eq(orders.stripePaymentIntentId, paymentIntent.id))
-
-      console.log('Updated order status to payment_failed for:', paymentIntent.id)
-    }
-
+    // TODO: Query Firestore for orders with this stripe payment intent ID
+    // TODO: Update order status to 'failed' 
     // TODO: Send payment failure notification email
     // TODO: Log failure reason for analytics
 
@@ -225,23 +179,11 @@ async function handlePaymentIntentCanceled(paymentIntent: Stripe.PaymentIntent) 
   console.log('Processing canceled payment:', paymentIntent.id)
 
   try {
-    // Check if order exists and update status
-    const existingOrders = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.stripePaymentIntentId, paymentIntent.id))
-      .limit(1)
+    // For now, just log the cancellation
+    console.log('Payment canceled for payment intent:', paymentIntent.id)
 
-    if (existingOrders.length > 0) {
-      await db
-        .update(orders)
-        .set({
-          status: 'canceled',
-        })
-        .where(eq(orders.stripePaymentIntentId, paymentIntent.id))
-
-      console.log('Updated order status to canceled for:', paymentIntent.id)
-    }
+    // TODO: Query Firestore for orders with this stripe payment intent ID
+    // TODO: Update order status to 'canceled'
 
   } catch (error: any) {
     console.error('Error handling canceled payment:', error)
@@ -253,24 +195,11 @@ async function handlePaymentIntentRequiresAction(paymentIntent: Stripe.PaymentIn
   console.log('Processing payment requiring action:', paymentIntent.id)
 
   try {
-    // Check if order exists and update status
-    const existingOrders = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.stripePaymentIntentId, paymentIntent.id))
-      .limit(1)
+    // For now, just log the action required
+    console.log('Payment requires action for payment intent:', paymentIntent.id)
 
-    if (existingOrders.length > 0) {
-      await db
-        .update(orders)
-        .set({
-          status: 'pending_payment',
-        })
-        .where(eq(orders.stripePaymentIntentId, paymentIntent.id))
-
-      console.log('Updated order status to requires_action for:', paymentIntent.id)
-    }
-
+    // TODO: Query Firestore for orders with this stripe payment intent ID
+    // TODO: Update order status to 'pending'
     // TODO: Send email to customer about required action
 
   } catch (error: any) {

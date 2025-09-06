@@ -20,20 +20,22 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-// Mock data structure - replace with actual data fetching
+// Order data structure from API
 interface Order {
   id: string
   totalCents: number
   currency: string
   status: 'pending' | 'paid' | 'fulfilled' | 'completed' | 'refunded' | 'disputed'
-  createdAt: Date
+  createdAt: string
   items: {
     id: string
     title: string
     type: 'digital' | 'physical'
     quantity: number
     unitPriceCents: number
-    downloadUrl?: string
+    productId: string
+    shopName: string
+    shopHandle: string
   }[]
   shippingAddress?: {
     name: string
@@ -64,17 +66,41 @@ export function OrdersPage() {
       return
     }
 
-    // TODO: Implement actual order fetching from your database
-    // For now, show empty state
+    // Fetch user orders from API
     const loadOrders = async () => {
       try {
         setLoading(true)
-        // This would be replaced with actual API call
-        // const userOrders = await fetchUserOrders(user.uid)
-        // setOrders(userOrders)
         
-        // For now, set empty array
-        setOrders([])
+        // Get Firebase ID token
+        const idToken = await user.getIdToken()
+        
+        // Debug: Check user info
+        console.log('Current user:', { uid: user.uid, email: user.email })
+        
+        // Debug: Check what the API returns for this user
+        const debugResponse = await fetch('/api/debug/user', {
+          headers: {
+            'Authorization': `Bearer ${idToken}`,
+          },
+        })
+        if (debugResponse.ok) {
+          const debugData = await debugResponse.json()
+          console.log('User debug info:', debugData)
+        }
+        
+        const response = await fetch('/api/orders', {
+          headers: {
+            'Authorization': `Bearer ${idToken}`,
+          },
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to fetch orders')
+        }
+        
+        const data = await response.json()
+        setOrders(data.orders || [])
       } catch (err: any) {
         setError(err.message || 'Failed to load orders')
       } finally {
@@ -205,7 +231,7 @@ export function OrdersPage() {
                       <div>
                         <CardTitle className="text-lg">Order #{order.id.slice(-8)}</CardTitle>
                         <CardDescription>
-                          Placed on {order.createdAt.toLocaleDateString()}
+                          Placed on {new Date(order.createdAt).toLocaleDateString()}
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
@@ -236,7 +262,7 @@ export function OrdersPage() {
                               <div>
                                 <h4 className="font-medium text-slate-900">{item.title}</h4>
                                 <p className="text-sm text-slate-500">
-                                  {item.type === 'digital' ? 'Digital Product' : 'Physical Product'} • Qty: {item.quantity}
+                                  by {item.shopName} • {item.type === 'digital' ? 'Digital Product' : 'Physical Product'} • Qty: {item.quantity}
                                 </p>
                               </div>
                             </div>
@@ -244,7 +270,7 @@ export function OrdersPage() {
                               <span className="font-medium">
                                 {formatPrice(item.unitPriceCents * item.quantity, order.currency)}
                               </span>
-                              {item.type === 'digital' && item.downloadUrl && (
+                              {item.type === 'digital' && (
                                 <Button size="sm" variant="outline">
                                   <Download className="h-3 w-3 mr-1" />
                                   Download
