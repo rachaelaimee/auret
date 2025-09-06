@@ -92,6 +92,14 @@ export function CheckoutPage() {
   // Get current order data (for now, just use the first currency)
   const currentOrder = ordersByCurrency[0]
 
+  // Debug: Log cart items to see shop data
+  useEffect(() => {
+    if (mounted && items.length > 0) {
+      console.log('Cart items in checkout:', items)
+      console.log('Current order:', currentOrder)
+    }
+  }, [mounted, items, currentOrder])
+
   // Redirect if cart is empty
   if (mounted && items.length === 0) {
     return (
