@@ -131,10 +131,17 @@ function PaymentFormContent({
         throw new Error(stripeError.message || 'Payment failed')
       }
 
+      console.log('=== PAYMENT RESULT ===')
+      console.log('Payment Intent Status:', paymentIntent?.status)
+      console.log('Payment Intent ID:', paymentIntentId)
+      console.log('Full Payment Intent:', paymentIntent)
+
       if (paymentIntent?.status === 'succeeded') {
+        console.log('✅ Payment succeeded, calling onPaymentSuccess')
         onPaymentSuccess(paymentIntentId)
       } else {
-        throw new Error('Payment was not successful')
+        console.error('❌ Payment not successful, status:', paymentIntent?.status)
+        throw new Error(`Payment was not successful. Status: ${paymentIntent?.status}`)
       }
 
     } catch (err: any) {

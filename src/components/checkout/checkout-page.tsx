@@ -79,9 +79,15 @@ export function CheckoutPage() {
   }
 
   const handlePaymentSuccess = (paymentIntentId: string) => {
+    console.log('=== CHECKOUT SUCCESS ===')
+    console.log('Payment Intent ID received:', paymentIntentId)
+    console.log('Setting order confirmation and moving to success step')
+    
     setOrderConfirmation(paymentIntentId)
     setCurrentStep('success')
     clearCart() // Clear cart after successful payment
+    
+    console.log('✅ Checkout success flow completed')
   }
 
   const handlePaymentError = (error: string) => {
