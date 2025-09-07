@@ -11,11 +11,19 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ''
 
 export async function POST(request: NextRequest) {
+  console.log('🔔 === STRIPE WEBHOOK CALLED ===')
+  console.log('Request method:', request.method)
+  console.log('Request URL:', request.url)
+  
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')
+  
+  console.log('Body length:', body.length)
+  console.log('Signature present:', !!signature)
+  console.log('Webhook secret configured:', !!webhookSecret)
 
   if (!signature) {
-    console.error('No Stripe signature found')
+    console.error('❌ No Stripe signature found')
     return NextResponse.json(
       { error: 'No signature found' },
       { status: 400 }
@@ -26,9 +34,13 @@ export async function POST(request: NextRequest) {
 
   try {
     // Verify webhook signature
+    console.log('🔐 Verifying webhook signature...')
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
+    console.log('✅ Webhook signature verified')
+    console.log('Event type:', event.type)
+    console.log('Event ID:', event.id)
   } catch (err: any) {
-    console.error('Webhook signature verification failed:', err.message)
+    console.error('❌ Webhook signature verification failed:', err.message)
     return NextResponse.json(
       { error: `Webhook signature verification failed: ${err.message}` },
       { status: 400 }
@@ -36,7 +48,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Log the webhook event
-  console.log(`Received Stripe webhook: ${event.type}`)
+  console.log(`🔔 Received Stripe webhook: ${event.type}`)
 
   try {
     // Log the webhook event (removed database tracking for now)
@@ -82,15 +94,25 @@ export async function POST(request: NextRequest) {
 }
 
 async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
-  console.log('Processing successful payment:', paymentIntent.id)
+  console.log('💰 === PROCESSING SUCCESSFUL PAYMENT ===')
+  console.log('Payment Intent ID:', paymentIntent.id)
+  console.log('Amount:', paymentIntent.amount)
+  console.log('Currency:', paymentIntent.currency)
+  
+  console.log('📋 Payment Intent Metadata:', JSON.stringify(paymentIntent.metadata, null, 2))
 
   try {
     // Extract order data from metadata
     const orderItemsData = JSON.parse(paymentIntent.metadata.orderItems || '[]')
     const customerEmail = paymentIntent.metadata.customerEmail
     const shippingAddress = JSON.parse(paymentIntent.metadata.shippingAddress || '{}')
+    
+    console.log('📦 Order Items Data:', orderItemsData)
+    console.log('📧 Customer Email:', customerEmail)
+    console.log('🏠 Shipping Address:', shippingAddress)
 
     if (!orderItemsData.length) {
+      console.error('❌ No order items found in payment intent metadata')
       throw new Error('No order items found in payment intent metadata')
     }
 
@@ -98,7 +120,10 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     // For now, we'll need to extract the user ID from the payment intent metadata
     // This should be added when creating the payment intent
     const userId = paymentIntent.metadata.userId
+    console.log('👤 User ID from metadata:', userId)
+    
     if (!userId) {
+      console.error('❌ User ID not found in payment intent metadata')
       throw new Error('User ID not found in payment intent metadata')
     }
 
