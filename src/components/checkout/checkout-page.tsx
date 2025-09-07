@@ -14,6 +14,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ShippingForm, ShippingFormData } from './shipping-form'
 import { PaymentForm } from './payment-form'
 import { convertAndFormatPrice } from '@/lib/currency'
+import { ShippingCalculator } from '@/lib/shipping'
+import { getShopById } from '@/lib/firestore'
 import { 
   ShoppingBag, 
   CreditCard, 
@@ -38,6 +40,8 @@ export function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('review')
   const [shippingData, setShippingData] = useState<ShippingFormData | null>(null)
   const [orderConfirmation, setOrderConfirmation] = useState<string | null>(null)
+  const [shippingCalculations, setShippingCalculations] = useState<any[]>([])
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -72,9 +76,62 @@ export function CheckoutPage() {
     }, {} as Record<string, any>)
   }))
 
+  // Calculate shipping when shipping data is available
+  const calculateShipping = async (shippingFormData: ShippingFormData) => {
+    if (!currentOrder) return []
+
+    setIsCalculatingShipping(true)
+    try {
+      // Get shop information for shipping calculation
+      const shopPromises = Object.keys(currentOrder.shops).map(shopId => getShopById(shopId))
+      const shops = await Promise.all(shopPromises)
+      const shopsMap = shops.reduce((acc, shop) => {
+        if (shop) acc[shop.id] = shop
+        return acc
+      }, {} as Record<string, any>)
+
+      // Group items by shop for shipping calculation
+      const itemsByShop = currentOrder.items.reduce((acc, item) => {
+        if (!acc[item.shopId]) acc[item.shopId] = []
+        acc[item.shopId].push({
+          id: item.id,
+          productId: item.productId,
+          price: item.price / 100, // Convert from cents to currency units
+          quantity: item.quantity,
+          type: item.type
+        })
+        return acc
+      }, {} as Record<string, any>)
+
+      // Calculate shipping costs
+      const shippingAddress = {
+        country: shippingFormData.shippingCountry,
+        state: shippingFormData.shippingState,
+        city: shippingFormData.shippingCity,
+        postal_code: shippingFormData.shippingPostalCode
+      }
+
+      const calculations = ShippingCalculator.calculateShipping(
+        itemsByShop,
+        shopsMap,
+        shippingAddress,
+        currentOrder.currency
+      )
+
+      setShippingCalculations(calculations)
+      return calculations
+    } catch (error) {
+      console.error('Error calculating shipping:', error)
+      return []
+    } finally {
+      setIsCalculatingShipping(false)
+    }
+  }
+
   // Step handlers
-  const handleShippingSubmit = (data: ShippingFormData) => {
+  const handleShippingSubmit = async (data: ShippingFormData) => {
     setShippingData(data)
+    await calculateShipping(data)
     setCurrentStep('payment')
   }
 
@@ -316,8 +373,9 @@ export function CheckoutPage() {
               orderData={{
                 items: currentOrder.items,
                 subtotal: currentOrder.subtotal,
+                shipping: shippingCalculations.reduce((sum, calc) => sum + (calc.shippingCost || 0), 0),
                 currency: currentOrder.currency,
-                total: currentOrder.subtotal, // Add shipping/tax calculation here
+                total: currentOrder.subtotal + shippingCalculations.reduce((sum, calc) => sum + (calc.shippingCost || 0), 0),
               }}
               shippingData={shippingData}
               onPaymentSuccess={handlePaymentSuccess}
