@@ -53,8 +53,13 @@ export default function TutorialsPage() {
       setLoading(true)
       const fetchedTutorials = await getPublishedTutorials()
       setTutorials(fetchedTutorials)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading tutorials:', error)
+      // If collection doesn't exist yet or permissions issue, just show empty state
+      if (error.code === 'permission-denied' || error.code === 'not-found') {
+        console.log('Tutorials collection not accessible yet - showing empty state')
+        setTutorials([])
+      }
     } finally {
       setLoading(false)
     }

@@ -28,11 +28,30 @@ service cloud.firestore {
         get(/databases/$(database)/documents/shops/$(resource.data.shopId)).data.ownerId == request.auth.uid;
     }
     
-    // Orders collection (for later)
+    // Orders collection
     match /orders/{orderId} {
       allow read, write: if request.auth != null && 
         (resource.data.buyerId == request.auth.uid || 
          resource.data.sellerId == request.auth.uid);
+    }
+    
+    // Tutorials collection
+    match /tutorials/{tutorialId} {
+      allow read: if resource.data.status == 'published' || 
+        (request.auth != null && resource.data.authorId == request.auth.uid);
+      allow create: if request.auth != null && 
+        request.auth.uid == resource.data.authorId;
+      allow update, delete: if request.auth != null && 
+        resource.data.authorId == request.auth.uid;
+    }
+    
+    // Tutorial comments collection
+    match /tutorials/{tutorialId}/comments/{commentId} {
+      allow read: if true; // Public read for comments
+      allow create: if request.auth != null && 
+        request.auth.uid == resource.data.authorId;
+      allow update, delete: if request.auth != null && 
+        resource.data.authorId == request.auth.uid;
     }
   }
 }

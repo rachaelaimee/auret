@@ -544,17 +544,26 @@ export async function createTutorial(tutorialData: Omit<Tutorial, 'id' | 'create
 
 // Get all published tutorials
 export async function getPublishedTutorials(limitCount?: number): Promise<Tutorial[]> {
-  const tutorialsRef = collection(db, 'tutorials')
-  const q = limitCount 
-    ? query(tutorialsRef, where('status', '==', 'published'), orderBy('createdAt', 'desc'), limit(limitCount))
-    : query(tutorialsRef, where('status', '==', 'published'), orderBy('createdAt', 'desc'))
-  
-  const querySnapshot = await getDocs(q)
-  
-  return querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  })) as Tutorial[]
+  try {
+    const tutorialsRef = collection(db, 'tutorials')
+    const q = limitCount 
+      ? query(tutorialsRef, where('status', '==', 'published'), orderBy('createdAt', 'desc'), limit(limitCount))
+      : query(tutorialsRef, where('status', '==', 'published'), orderBy('createdAt', 'desc'))
+    
+    const querySnapshot = await getDocs(q)
+    
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Tutorial[]
+  } catch (error: any) {
+    // If collection doesn't exist yet, return empty array
+    if (error.code === 'failed-precondition' || error.code === 'not-found') {
+      console.log('Tutorials collection does not exist yet, returning empty array')
+      return []
+    }
+    throw error
+  }
 }
 
 // Get tutorials by category
