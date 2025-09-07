@@ -151,18 +151,26 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
         status: 'paid',
         stripePaymentIntentId: paymentIntent.id,
         shippingAddress: shippingAddress,
-        items: items.map((item: any) => ({
-          id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          productId: item.productId,
-          title: item.title,
-          type: item.type,
-          quantity: item.quantity,
-          unitPriceCents: Math.round(item.price * 100), // Convert to cents
-          shopId: item.shopId,
-          shopName: item.shopName || 'Unknown Shop',
-          shopHandle: item.shopHandle || '',
-          variantId: item.variantId || undefined,
-        }))
+        items: items.map((item: any) => {
+          const orderItem: any = {
+            id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            productId: item.productId,
+            title: item.title,
+            type: item.type,
+            quantity: item.quantity,
+            unitPriceCents: Math.round(item.price * 100), // Convert to cents
+            shopId: item.shopId,
+            shopName: item.shopName || 'Unknown Shop',
+            shopHandle: item.shopHandle || '',
+          }
+          
+          // Only add variantId if it exists and is not null
+          if (item.variantId) {
+            orderItem.variantId = item.variantId
+          }
+          
+          return orderItem
+        })
       })
 
       createdOrders.push(order)
