@@ -118,6 +118,13 @@ export function CheckoutPage() {
         currentOrder.currency
       )
 
+      console.log('🚚 === SHIPPING CALCULATION DEBUG ===')
+      console.log('Items by shop:', itemsByShop)
+      console.log('Shops map:', shopsMap)
+      console.log('Shipping address:', shippingAddress)
+      console.log('Currency:', currentOrder.currency)
+      console.log('Shipping calculations:', calculations)
+
       setShippingCalculations(calculations)
       return calculations
     } catch (error) {
