@@ -419,6 +419,47 @@ export async function getShopProducts(shopId: string): Promise<Product[]> {
   })) as Product[]
 }
 
+// Tutorial Types and Functions
+export interface Tutorial {
+  id: string
+  authorId: string
+  authorName: string
+  shopId?: string // Optional - links to author's shop
+  shopHandle?: string
+  title: string
+  description: string
+  content: string // Rich text/markdown content
+  category: string // e.g., 'knitting', 'woodworking', 'jewelry'
+  tags: string[]
+  difficulty: 'beginner' | 'intermediate' | 'advanced'
+  estimatedTime: string // e.g., '2 hours', '1 day'
+  materials: string[] // List of materials needed
+  tools: string[] // List of tools needed
+  images: {
+    id: string
+    url: string
+    alt?: string
+    order: number
+  }[]
+  status: 'draft' | 'published'
+  likes: number
+  views: number
+  createdAt: Timestamp
+  updatedAt: Timestamp
+}
+
+export interface TutorialComment {
+  id: string
+  tutorialId: string
+  authorId: string
+  authorName: string
+  content: string
+  parentId?: string // For nested replies
+  likes: number
+  createdAt: Timestamp
+  updatedAt: Timestamp
+}
+
 // Order Types and Functions
 export interface OrderItem {
   id: string
@@ -483,6 +524,102 @@ export async function getUserOrders(userId: string): Promise<Order[]> {
     id: doc.id,
     ...doc.data()
   })) as Order[]
+}
+
+// Tutorial Functions
+
+// Create a new tutorial
+export async function createTutorial(tutorialData: Omit<Tutorial, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'views'>) {
+  const tutorial = {
+    ...tutorialData,
+    likes: 0,
+    views: 0,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }
+
+  const docRef = await addDoc(collection(db, 'tutorials'), tutorial)
+  return { id: docRef.id, ...tutorial }
+}
+
+// Get all published tutorials
+export async function getPublishedTutorials(limitCount?: number): Promise<Tutorial[]> {
+  const tutorialsRef = collection(db, 'tutorials')
+  const q = limitCount 
+    ? query(tutorialsRef, where('status', '==', 'published'), orderBy('createdAt', 'desc'), limit(limitCount))
+    : query(tutorialsRef, where('status', '==', 'published'), orderBy('createdAt', 'desc'))
+  
+  const querySnapshot = await getDocs(q)
+  
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Tutorial[]
+}
+
+// Get tutorials by category
+export async function getTutorialsByCategory(category: string): Promise<Tutorial[]> {
+  const tutorialsRef = collection(db, 'tutorials')
+  const q = query(
+    tutorialsRef, 
+    where('status', '==', 'published'),
+    where('category', '==', category),
+    orderBy('createdAt', 'desc')
+  )
+  const querySnapshot = await getDocs(q)
+  
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Tutorial[]
+}
+
+// Get tutorials by author
+export async function getTutorialsByAuthor(authorId: string): Promise<Tutorial[]> {
+  const tutorialsRef = collection(db, 'tutorials')
+  const q = query(
+    tutorialsRef,
+    where('authorId', '==', authorId),
+    orderBy('createdAt', 'desc')
+  )
+  const querySnapshot = await getDocs(q)
+  
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Tutorial[]
+}
+
+// Get a specific tutorial
+export async function getTutorial(tutorialId: string): Promise<Tutorial | null> {
+  const tutorialRef = doc(db, 'tutorials', tutorialId)
+  const tutorialSnap = await getDoc(tutorialRef)
+  
+  if (tutorialSnap.exists()) {
+    // Increment view count
+    await updateDoc(tutorialRef, {
+      views: (tutorialSnap.data().views || 0) + 1
+    })
+    
+    return { id: tutorialSnap.id, ...tutorialSnap.data() } as Tutorial
+  }
+  
+  return null
+}
+
+// Update tutorial
+export async function updateTutorial(tutorialId: string, updates: Partial<Tutorial>) {
+  const tutorialRef = doc(db, 'tutorials', tutorialId)
+  await updateDoc(tutorialRef, {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  })
+}
+
+// Delete tutorial
+export async function deleteTutorial(tutorialId: string) {
+  const tutorialRef = doc(db, 'tutorials', tutorialId)
+  await deleteDoc(tutorialRef)
 }
 
 // Get a specific order
