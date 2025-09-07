@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { convertAndFormatPrice } from '@/lib/currency'
+import { convertAndFormatPrice, formatPrice, Currency } from '@/lib/currency'
 import { useCurrency } from '@/components/currency/currency-provider'
 import { useAuth } from '@/components/auth/auth-provider'
 import { CreditCard, Lock, Loader2, AlertCircle } from 'lucide-react'
@@ -193,7 +193,7 @@ function PaymentFormContent({
             {orderData.shipping && (
               <div className="flex justify-between">
                 <span>Shipping:</span>
-                <span>{convertAndFormatPrice(orderData.shipping, displayCurrency)}</span>
+                <span>{formatPrice(orderData.shipping, orderData.currency as Currency)}</span>
               </div>
             )}
             
