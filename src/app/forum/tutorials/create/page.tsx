@@ -73,7 +73,7 @@ export default function CreateTutorialPage() {
 
   useEffect(() => {
     if (!user) {
-      router.push('/auth/signin?redirect=/forum/tutorials/create')
+      router.push('/auth/signin?redirect=' + encodeURIComponent('/forum/tutorials/create'))
       return
     }
     
