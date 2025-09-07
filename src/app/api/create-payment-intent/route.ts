@@ -43,6 +43,8 @@ export async function POST(request: NextRequest) {
           quantity: item.quantity,
           price: item.price,
           shopId: item.shopId,
+          shopName: item.shopName,  // ✅ Include shop name
+          shopHandle: item.shopHandle,  // ✅ Include shop handle  
           type: item.type,
           variantId: item.variantId || null
         }))),

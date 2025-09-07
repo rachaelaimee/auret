@@ -161,7 +161,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
             unitPriceCents: Math.round(item.price * 100), // Convert to cents
             shopId: item.shopId,
             shopName: item.shopName || 'Unknown Shop',
-            shopHandle: item.shopHandle || '',
+            shopHandle: item.shopHandle || 'unknown',
           }
           
           // Only add variantId if it exists and is not null
