@@ -103,7 +103,7 @@ export function CraftRoomsPage() {
             </Button>
           ) : (
             <div className="text-sm text-slate-500">
-              <Link href="/auth/signin" className="text-slate-900 hover:underline">
+              <Link href="/auth/signin?redirect=/craft-rooms" className="text-slate-900 hover:underline">
                 Sign in
               </Link> to create rooms
             </div>
@@ -189,7 +189,7 @@ export function CraftRoomsPage() {
                         </Button>
                       </Link>
                     ) : (
-                      <Link href="/auth/signin">
+                      <Link href="/auth/signin?redirect=/craft-rooms">
                         <Button variant="outline" className="w-full">
                           Sign in to Join
                         </Button>
