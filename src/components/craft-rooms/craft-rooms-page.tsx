@@ -96,11 +96,17 @@ export function CraftRoomsPage() {
             />
           </div>
           
-          {user && (
+          {user ? (
             <Button onClick={() => setShowCreateDialog(true)}>
               <Video className="h-4 w-4 mr-2" />
               Create Room
             </Button>
+          ) : (
+            <div className="text-sm text-slate-500">
+              <Link href="/auth/signin" className="text-slate-900 hover:underline">
+                Sign in
+              </Link> to create rooms
+            </div>
           )}
         </div>
       </div>
