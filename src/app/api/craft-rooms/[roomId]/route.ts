@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { craftRooms, craftRoomParticipants } from "@/lib/db/schema";
-import { verifyIdToken } from "@/lib/firebase-admin";
-import { eq, and } from "drizzle-orm";
+import { adminAuth } from "@/lib/firebase-admin";
+import { 
+  getCraftRoom, 
+  updateCraftRoom, 
+  endCraftRoom,
+  getRoomParticipants 
+} from "@/lib/firestore-craft-rooms";
 
 interface RouteParams {
   params: {
@@ -15,13 +18,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { roomId } = params;
 
-    const room = await db
-      .select()
-      .from(craftRooms)
-      .where(eq(craftRooms.id, roomId))
-      .limit(1);
-
-    if (!room.length) {
+    const room = await getCraftRoom(roomId);
+    if (!room) {
       return NextResponse.json(
         { success: false, error: "Room not found" },
         { status: 404 }
@@ -29,25 +27,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get participants
-    const participants = await db
-      .select({
-        id: craftRoomParticipants.id,
-        userId: craftRoomParticipants.userId,
-        role: craftRoomParticipants.role,
-        joinedAt: craftRoomParticipants.joinedAt,
-        leftAt: craftRoomParticipants.leftAt,
-        isVideoEnabled: craftRoomParticipants.isVideoEnabled,
-        isAudioEnabled: craftRoomParticipants.isAudioEnabled,
-      })
-      .from(craftRoomParticipants)
-      .where(eq(craftRoomParticipants.roomId, roomId));
-
+    const participants = await getRoomParticipants(roomId);
     const activeParticipants = participants.filter(p => !p.leftAt);
 
     return NextResponse.json({
       success: true,
       data: {
-        ...room[0],
+        ...room,
         participants: activeParticipants,
         participantCount: activeParticipants.length,
       },
@@ -73,8 +59,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const idToken = authHeader.split("Bearer ")[1];
-    const user = await verifyIdToken(idToken);
-    if (!user) {
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    
+    if (!decodedToken) {
       return NextResponse.json(
         { success: false, error: "Invalid authentication token" },
         { status: 401 }
@@ -85,13 +72,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
 
     // Check if user is the host
-    const room = await db
-      .select()
-      .from(craftRooms)
-      .where(and(eq(craftRooms.id, roomId), eq(craftRooms.hostId, user.uid)))
-      .limit(1);
-
-    if (!room.length) {
+    const room = await getCraftRoom(roomId);
+    if (!room || room.hostId !== decodedToken.uid) {
       return NextResponse.json(
         { success: false, error: "Room not found or unauthorized" },
         { status: 404 }
@@ -99,14 +81,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Update room
-    const [updatedRoom] = await db
-      .update(craftRooms)
-      .set({
-        ...body,
-        updatedAt: new Date(),
-      })
-      .where(eq(craftRooms.id, roomId))
-      .returning();
+    await updateCraftRoom(roomId, body);
+    const updatedRoom = await getCraftRoom(roomId);
 
     return NextResponse.json({
       success: true,
@@ -133,8 +109,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     const idToken = authHeader.split("Bearer ")[1];
-    const user = await verifyIdToken(idToken);
-    if (!user) {
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    
+    if (!decodedToken) {
       return NextResponse.json(
         { success: false, error: "Invalid authentication token" },
         { status: 401 }
@@ -144,13 +121,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { roomId } = params;
 
     // Check if user is the host
-    const room = await db
-      .select()
-      .from(craftRooms)
-      .where(and(eq(craftRooms.id, roomId), eq(craftRooms.hostId, user.uid)))
-      .limit(1);
-
-    if (!room.length) {
+    const room = await getCraftRoom(roomId);
+    if (!room || room.hostId !== decodedToken.uid) {
       return NextResponse.json(
         { success: false, error: "Room not found or unauthorized" },
         { status: 404 }
@@ -158,28 +130,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // End the room
-    const [endedRoom] = await db
-      .update(craftRooms)
-      .set({
-        status: "ended",
-        endedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(craftRooms.id, roomId))
-      .returning();
-
-    // Mark all participants as left
-    await db
-      .update(craftRoomParticipants)
-      .set({
-        leftAt: new Date(),
-      })
-      .where(
-        and(
-          eq(craftRoomParticipants.roomId, roomId),
-          eq(craftRoomParticipants.leftAt, null)
-        )
-      );
+    await endCraftRoom(roomId);
+    const endedRoom = await getCraftRoom(roomId);
 
     return NextResponse.json({
       success: true,

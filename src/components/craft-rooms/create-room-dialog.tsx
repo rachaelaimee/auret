@@ -67,7 +67,10 @@ export function CreateRoomDialog({ open, onOpenChange, onRoomCreated }: CreateRo
           "Content-Type": "application/json",
           "Authorization": `Bearer ${idToken}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          tags: data.tags ? data.tags.split(' ').filter(Boolean) : [],
+        }),
       });
 
       const result = await response.json();

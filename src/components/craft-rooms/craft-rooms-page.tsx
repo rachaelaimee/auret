@@ -15,7 +15,7 @@ interface CraftRoom {
   id: string;
   title: string;
   description?: string;
-  tags?: string;
+  tags?: string[];
   maxParticipants: number;
   participantCount: number;
   hostId: string;
@@ -53,7 +53,7 @@ export function CraftRoomsPage() {
   const filteredRooms = rooms.filter(room =>
     room.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     room.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    room.tags?.toLowerCase().includes(searchQuery.toLowerCase())
+    room.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleRoomCreated = (newRoom: CraftRoom) => {
@@ -154,9 +154,9 @@ export function CraftRoomsPage() {
               <CardContent>
                 <div className="space-y-3">
                   {/* Tags */}
-                  {room.tags && (
+                  {room.tags && room.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {room.tags.split(" ").filter(Boolean).map((tag, index) => (
+                      {room.tags.map((tag, index) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {tag}
                         </Badge>
