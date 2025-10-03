@@ -44,6 +44,16 @@ export const webhookStatusEnum = pgEnum("webhook_status", [
   "succeeded",
   "failed"
 ]);
+export const craftRoomStatusEnum = pgEnum("craft_room_status", [
+  "active",
+  "paused", 
+  "ended"
+]);
+export const participantRoleEnum = pgEnum("participant_role", [
+  "host",
+  "moderator",
+  "participant"
+]);
 
 // Users table
 export const users = pgTable("users", {
@@ -469,6 +479,71 @@ export const featureFlags = pgTable("feature_flags", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Craft Rooms
+export const craftRooms = pgTable("craft_rooms", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  hostId: text("host_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  tags: text("tags_text"), // Space-separated tags for discovery
+  maxParticipants: integer("max_participants").default(8),
+  isPublic: boolean("is_public").default(true),
+  requiresApproval: boolean("requires_approval").default(false),
+  status: craftRoomStatusEnum("status").notNull().default("active"),
+  dailyRoomName: varchar("daily_room_name", { length: 255 }), // Daily.co room identifier
+  dailyRoomUrl: text("daily_room_url"), // Daily.co room URL
+  scheduledStartAt: timestamp("scheduled_start_at"),
+  actualStartedAt: timestamp("actual_started_at"),
+  endedAt: timestamp("ended_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  hostIdx: index("craft_rooms_host_idx").on(table.hostId),
+  statusIdx: index("craft_rooms_status_idx").on(table.status),
+  publicIdx: index("craft_rooms_public_idx").on(table.isPublic),
+  tagsIdx: index("craft_rooms_tags_idx").on(table.tags),
+  dailyRoomIdx: index("craft_rooms_daily_room_idx").on(table.dailyRoomName),
+}));
+
+// Craft Room Participants
+export const craftRoomParticipants = pgTable("craft_room_participants", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  roomId: text("room_id").notNull().references(() => craftRooms.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: participantRoleEnum("role").notNull().default("participant"),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  leftAt: timestamp("left_at"),
+  isVideoEnabled: boolean("is_video_enabled").default(true),
+  isAudioEnabled: boolean("is_audio_enabled").default(true),
+  isBanned: boolean("is_banned").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  roomUserIdx: uniqueIndex("craft_room_participants_room_user_idx").on(table.roomId, table.userId),
+  roomIdx: index("craft_room_participants_room_idx").on(table.roomId),
+  userIdx: index("craft_room_participants_user_idx").on(table.userId),
+}));
+
+// Craft Room Messages (for text chat alongside video)
+export const craftRoomMessages = pgTable("craft_room_messages", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  roomId: text("room_id").notNull().references(() => craftRooms.id, { onDelete: "cascade" }),
+  senderId: text("sender_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  messageType: varchar("message_type", { length: 20 }).default("text"), // text, system, media
+  metadata: jsonb("metadata").$type<{
+    replyToId?: string;
+    mediaUrl?: string;
+    mediaType?: string;
+  }>(),
+  isDeleted: boolean("is_deleted").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  roomIdx: index("craft_room_messages_room_idx").on(table.roomId),
+  senderIdx: index("craft_room_messages_sender_idx").on(table.senderId),
+  typeIdx: index("craft_room_messages_type_idx").on(table.messageType),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles),
@@ -478,6 +553,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   forumThreads: many(forumThreads),
   forumPosts: many(forumPosts),
   favorites: many(favorites),
+  hostedCraftRooms: many(craftRooms),
+  craftRoomParticipations: many(craftRoomParticipants),
+  craftRoomMessages: many(craftRoomMessages),
 }));
 
 export const profilesRelations = relations(profiles, ({ one }) => ({
@@ -565,4 +643,35 @@ export const forumPostsRelations = relations(forumPosts, ({ one, many }) => ({
     references: [users.id],
   }),
   votes: many(forumVotes),
+}));
+
+export const craftRoomsRelations = relations(craftRooms, ({ one, many }) => ({
+  host: one(users, {
+    fields: [craftRooms.hostId],
+    references: [users.id],
+  }),
+  participants: many(craftRoomParticipants),
+  messages: many(craftRoomMessages),
+}));
+
+export const craftRoomParticipantsRelations = relations(craftRoomParticipants, ({ one }) => ({
+  room: one(craftRooms, {
+    fields: [craftRoomParticipants.roomId],
+    references: [craftRooms.id],
+  }),
+  user: one(users, {
+    fields: [craftRoomParticipants.userId],
+    references: [users.id],
+  }),
+}));
+
+export const craftRoomMessagesRelations = relations(craftRoomMessages, ({ one }) => ({
+  room: one(craftRooms, {
+    fields: [craftRoomMessages.roomId],
+    references: [craftRooms.id],
+  }),
+  sender: one(users, {
+    fields: [craftRoomMessages.senderId],
+    references: [users.id],
+  }),
 }));

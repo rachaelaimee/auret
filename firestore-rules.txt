@@ -37,7 +37,7 @@ service cloud.firestore {
     
     // Tutorials collection
     match /tutorials/{tutorialId} {
-      allow read: if resource.data.status == 'published' || 
+      allow read: if resource == null || resource.data.status == 'published' || 
         (request.auth != null && resource.data.authorId == request.auth.uid);
       allow create: if request.auth != null && 
         request.auth.uid == resource.data.authorId;

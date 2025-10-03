@@ -35,6 +35,9 @@ export function Navigation({ user }: NavigationProps) {
             <Link href="/forum" className="text-slate-600 hover:text-slate-900">
               Forum
             </Link>
+            <Link href="/craft-rooms" className="text-slate-600 hover:text-slate-900">
+              Craft Together
+            </Link>
             <Link href="/sell" className="text-slate-600 hover:text-slate-900">
               Start Selling
             </Link>

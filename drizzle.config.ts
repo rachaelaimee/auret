@@ -9,4 +9,7 @@ export default {
   },
   verbose: true,
   strict: true,
+  introspect: {
+    casing: "snake_case",
+  },
 } satisfies Config;

@@ -545,18 +545,50 @@ export async function createTutorial(tutorialData: Omit<Tutorial, 'id' | 'create
 // Get all published tutorials
 export async function getPublishedTutorials(limitCount?: number): Promise<Tutorial[]> {
   try {
+    console.log('🔍 Starting getPublishedTutorials...')
     const tutorialsRef = collection(db, 'tutorials')
+    console.log('📁 Created collection reference for "tutorials"')
+    
+    // First, try to get ALL documents to see what's there
+    console.log('🔍 Attempting to get all documents first...')
+    const allDocsSnapshot = await getDocs(tutorialsRef)
+    console.log(`📋 Found ${allDocsSnapshot.size} total documents in collection`)
+    
+    if (allDocsSnapshot.size > 0) {
+      console.log('📄 Documents found:')
+      allDocsSnapshot.docs.forEach((doc, index) => {
+        const data = doc.data()
+        console.log(`  ${index + 1}. ID: ${doc.id}`)
+        console.log(`     status: "${data.status}" (${typeof data.status})`)
+        console.log(`     title: "${data.title}"`)
+        console.log(`     createdAt: ${data.createdAt}`)
+      })
+    } else {
+      console.log('❌ No documents found in tutorials collection')
+      return []
+    }
+    
+    // Now try the filtered query
+    console.log('🔍 Now trying filtered query for published tutorials...')
     const q = limitCount 
       ? query(tutorialsRef, where('status', '==', 'published'), orderBy('createdAt', 'desc'), limit(limitCount))
       : query(tutorialsRef, where('status', '==', 'published'), orderBy('createdAt', 'desc'))
     
     const querySnapshot = await getDocs(q)
+    console.log(`✅ Filtered query returned ${querySnapshot.size} published tutorials`)
     
-    return querySnapshot.docs.map(doc => ({
+    const tutorials = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as Tutorial[]
+    
+    console.log('🎉 Successfully returning tutorials:', tutorials.length)
+    return tutorials
   } catch (error: any) {
+    console.error('❌ Error in getPublishedTutorials:', error)
+    console.error('❌ Error code:', error.code)
+    console.error('❌ Error message:', error.message)
+    
     // If collection doesn't exist yet, return empty array
     if (error.code === 'failed-precondition' || error.code === 'not-found') {
       console.log('Tutorials collection does not exist yet, returning empty array')
