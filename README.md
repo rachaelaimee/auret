@@ -5,7 +5,7 @@ A creator-first marketplace for handmade goods and digital craft assets. Built w
 ## Features
 
 - **Lower Fees**: 3.5% for physical goods, 4.5% for digital (no listing fees or forced ads)
-- **Predictable Payouts**: T+2 payouts with no blanket reserves on digital goods  
+- **Predictable Payouts**: T+2 payouts with no blanket reserves on digital goods
 - **Built-in Community**: Integrated forum for sharing techniques and building trust
 - **Secure Digital Delivery**: Watermarked downloads with attempt tracking
 - **Stripe Connect Express**: Fast seller onboarding with KYC handled by Stripe
@@ -14,7 +14,7 @@ A creator-first marketplace for handmade goods and digital craft assets. Built w
 
 - **Frontend**: Next.js 14 + TypeScript + Tailwind CSS + shadcn/ui
 - **Backend**: Supabase (Postgres + Auth + Storage)
-- **Payments**: Stripe Connect Express  
+- **Payments**: Stripe Connect Express
 - **Real-time**: Pusher Channels
 - **Email**: Resend
 - **Deployment**: Vercel
@@ -22,6 +22,7 @@ A creator-first marketplace for handmade goods and digital craft assets. Built w
 ## Quick Start
 
 1. **Clone and Install**:
+
    ```bash
    git clone <your-repo>
    cd auret
@@ -29,6 +30,7 @@ A creator-first marketplace for handmade goods and digital craft assets. Built w
    ```
 
 2. **Set up Environment**:
+
    ```bash
    cp .env.example .env.local
    # Fill in your API keys and database URLs
@@ -37,10 +39,11 @@ A creator-first marketplace for handmade goods and digital craft assets. Built w
 3. **Database Setup**:
    ```bash
    npm run db:generate
-   npm run db:migrate  
+   npm run db:migrate
    ```
-
+   ebase
 4. **Start Development**:
+
    ```bash
    npm run dev
    ```
@@ -52,7 +55,7 @@ A creator-first marketplace for handmade goods and digital craft assets. Built w
 ```
 src/
 ├── app/                    # Next.js App Router pages & API routes
-├── components/             # Reusable UI components  
+├── components/             # Reusable UI components
 ├── lib/
 │   ├── db/                # Database schema and connection
 │   ├── services/          # Business logic layer
@@ -68,7 +71,7 @@ npm run build             # Build for production
 npm run type-check        # Run TypeScript compiler
 npm run lint              # Run ESLint
 npm run db:generate       # Generate database migrations
-npm run db:migrate        # Run database migrations  
+npm run db:migrate        # Run database migrations
 npm run db:studio         # Open Drizzle Studio
 ```
 
@@ -83,24 +86,28 @@ npm run db:studio         # Open Drizzle Studio
 ## Key Features Implementation
 
 ### Marketplace Payments
+
 - Stripe Connect Express for seller onboarding
-- Application fees (3.5% physical, 4.5% digital)  
+- Application fees (3.5% physical, 4.5% digital)
 - Webhook handling for payments and payouts
 - Dispute management and evidence upload
 
 ### Digital Asset Security
+
 - Private file storage with signed URLs
 - Per-order download tokens with expiration
 - Watermarking for PDFs and images
 - Download attempt tracking and IP logging
 
 ### Community Forum
+
 - Real-time updates via Pusher Channels
 - Voting system with accepted answers
 - Moderation tools and content flagging
 - Unified identity with marketplace accounts
 
 ### Row Level Security (RLS)
+
 - Database-level access control
 - Users can only access their own data
 - Public read access for active content
@@ -109,17 +116,19 @@ npm run db:studio         # Open Drizzle Studio
 ## MVP Acceptance Criteria
 
 A seller can:
+
 - ✅ Onboard and create a shop
-- ✅ List both digital and physical products  
+- ✅ List both digital and physical products
 - ✅ Receive orders and process payments
 - ✅ Deliver digital downloads securely
 - ✅ Ship physical products with tracking
 - ✅ Receive payouts without admin intervention
 
 A buyer can:
+
 - ✅ Search and filter products
 - ✅ Purchase items with secure checkout
-- ✅ Download digital assets safely  
+- ✅ Download digital assets safely
 - ✅ Leave reviews and ratings
 - ✅ Participate in community forum
 
