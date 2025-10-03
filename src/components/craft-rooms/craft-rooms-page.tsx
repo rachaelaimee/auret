@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { CreateRoomDialog } from "./create-room-dialog";
 import { useAuth } from "@/components/auth/auth-provider";
+import { Navigation } from "@/components/navigation";
 import { Users, Video, Clock, Search } from "lucide-react";
 import Link from "next/link";
 
@@ -74,7 +75,9 @@ export function CraftRoomsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      <Navigation user={user} />
+      <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900 mb-2">
@@ -209,6 +212,7 @@ export function CraftRoomsPage() {
         onOpenChange={setShowCreateDialog}
         onRoomCreated={handleRoomCreated}
       />
+      </div>
     </div>
   );
 }
