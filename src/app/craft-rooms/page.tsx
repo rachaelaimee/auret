@@ -1,11 +1,14 @@
 import { Suspense } from "react";
+import { AuthProvider } from "@/components/auth/auth-provider";
 import { CraftRoomsPage } from "@/components/craft-rooms/craft-rooms-page";
 
 export default function CraftRoomsPageRoute() {
   return (
-    <Suspense fallback={<div>Loading craft rooms...</div>}>
-      <CraftRoomsPage />
-    </Suspense>
+    <AuthProvider>
+      <Suspense fallback={<div>Loading craft rooms...</div>}>
+        <CraftRoomsPage />
+      </Suspense>
+    </AuthProvider>
   );
 }
 

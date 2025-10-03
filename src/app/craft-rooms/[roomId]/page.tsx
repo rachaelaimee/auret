@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { AuthProvider } from "@/components/auth/auth-provider";
 import { CraftRoomPage } from "@/components/craft-rooms/craft-room-page";
 
 interface PageProps {
@@ -9,9 +10,11 @@ interface PageProps {
 
 export default function CraftRoomPageRoute({ params }: PageProps) {
   return (
-    <Suspense fallback={<div>Loading room...</div>}>
-      <CraftRoomPage roomId={params.roomId} />
-    </Suspense>
+    <AuthProvider>
+      <Suspense fallback={<div>Loading room...</div>}>
+        <CraftRoomPage roomId={params.roomId} />
+      </Suspense>
+    </AuthProvider>
   );
 }
 

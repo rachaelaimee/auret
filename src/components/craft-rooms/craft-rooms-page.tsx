@@ -25,11 +25,18 @@ interface CraftRoom {
 }
 
 export function CraftRoomsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [rooms, setRooms] = useState<CraftRoom[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  // Debug auth state
+  console.log('CraftRoomsPage - Auth state:', { 
+    user: user ? { uid: user.uid, email: user.email } : null, 
+    authLoading,
+    userExists: !!user 
+  });
 
   useEffect(() => {
     fetchRooms();
@@ -99,7 +106,11 @@ export function CraftRoomsPage() {
             />
           </div>
           
-          {user ? (
+          {authLoading ? (
+            <div className="text-sm text-slate-500">
+              Loading...
+            </div>
+          ) : user ? (
             <Button onClick={() => setShowCreateDialog(true)}>
               <Video className="h-4 w-4 mr-2" />
               Create Room
@@ -109,6 +120,9 @@ export function CraftRoomsPage() {
               <Link href="/auth/signin?redirect=/craft-rooms" className="text-slate-900 hover:underline">
                 Sign in
               </Link> to create rooms
+              <div className="text-xs text-red-500 mt-1">
+                Debug: User is {user ? 'logged in' : 'not logged in'}, Loading: {authLoading ? 'true' : 'false'}
+              </div>
             </div>
           )}
         </div>
