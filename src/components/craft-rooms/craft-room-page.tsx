@@ -83,8 +83,14 @@ export function CraftRoomPage({ roomId }: CraftRoomPageProps) {
 
     setJoining(true);
     try {
+      // Get the user's ID token for authentication
+      const idToken = await user.getIdToken();
+      
       const response = await fetch(`/api/craft-rooms/${roomId}/join`, {
         method: "POST",
+        headers: {
+          "Authorization": `Bearer ${idToken}`,
+        },
       });
       const result = await response.json();
 
@@ -106,8 +112,14 @@ export function CraftRoomPage({ roomId }: CraftRoomPageProps) {
     if (!user) return;
 
     try {
+      // Get the user's ID token for authentication
+      const idToken = await user.getIdToken();
+      
       const response = await fetch(`/api/craft-rooms/${roomId}/join`, {
         method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${idToken}`,
+        },
       });
       const result = await response.json();
 
