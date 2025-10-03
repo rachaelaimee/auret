@@ -149,8 +149,11 @@ export async function createCraftRoom(
     updatedAt: FieldValue.serverTimestamp(),
   };
 
+  console.log('Creating room with data:', room);
+  
   // Create room document
   const docRef = await adminDb.collection(CRAFT_ROOMS_COLLECTION).add(room);
+  console.log('Room created with ID:', docRef.id);
   
   // Add host as first participant
   await adminDb.collection(CRAFT_ROOM_PARTICIPANTS_COLLECTION).add({
@@ -165,25 +168,43 @@ export async function createCraftRoom(
 
   // Get the created room with server timestamps resolved
   const createdRoom = await docRef.get();
-  return {
+  const finalRoom = {
     id: docRef.id,
     ...createdRoom.data(),
   } as CraftRoom;
+  
+  console.log('Final room data:', finalRoom);
+  return finalRoom;
 }
 
 export async function getCraftRooms(limit = 20): Promise<CraftRoom[]> {
-  const snapshot = await adminDb
-    .collection(CRAFT_ROOMS_COLLECTION)
-    .where('status', '==', 'active')
-    .where('isPublic', '==', true)
-    .orderBy('createdAt', 'desc')
-    .limit(limit)
-    .get();
+  try {
+    console.log('Fetching craft rooms from Firestore...');
+    
+    // Simplified query - remove orderBy to avoid index issues
+    const snapshot = await adminDb
+      .collection(CRAFT_ROOMS_COLLECTION)
+      .where('status', '==', 'active')
+      .where('isPublic', '==', true)
+      .limit(limit)
+      .get();
 
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as CraftRoom[];
+    console.log('Found', snapshot.docs.length, 'rooms');
+    
+    const rooms = snapshot.docs.map(doc => {
+      const data = doc.data();
+      console.log('Room data:', { id: doc.id, ...data });
+      return {
+        id: doc.id,
+        ...data,
+      };
+    }) as CraftRoom[];
+
+    return rooms;
+  } catch (error) {
+    console.error('Error in getCraftRooms:', error);
+    throw error;
+  }
 }
 
 export async function getCraftRoom(roomId: string): Promise<CraftRoom | null> {
