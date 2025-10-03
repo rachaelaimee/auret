@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { craftRooms, craftRoomParticipants } from "@/lib/db/schema";
-import { getCurrentUser } from "@/lib/auth";
+import { verifyIdToken } from "@/lib/firebase-admin";
 import { eq, and } from "drizzle-orm";
 
 interface RouteParams {
@@ -64,10 +64,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PATCH /api/craft-rooms/[roomId] - Update room (host only)
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    const user = await verifyIdToken(idToken);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Invalid authentication token" },
         { status: 401 }
       );
     }
@@ -79,7 +88,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const room = await db
       .select()
       .from(craftRooms)
-      .where(and(eq(craftRooms.id, roomId), eq(craftRooms.hostId, user.id)))
+      .where(and(eq(craftRooms.id, roomId), eq(craftRooms.hostId, user.uid)))
       .limit(1);
 
     if (!room.length) {
@@ -115,10 +124,19 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/craft-rooms/[roomId] - End room (host only)
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    const user = await verifyIdToken(idToken);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Invalid authentication token" },
         { status: 401 }
       );
     }
@@ -129,7 +147,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const room = await db
       .select()
       .from(craftRooms)
-      .where(and(eq(craftRooms.id, roomId), eq(craftRooms.hostId, user.id)))
+      .where(and(eq(craftRooms.id, roomId), eq(craftRooms.hostId, user.uid)))
       .limit(1);
 
     if (!room.length) {

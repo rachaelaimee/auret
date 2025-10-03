@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { craftRooms, craftRoomParticipants } from "@/lib/db/schema";
-import { getCurrentUser } from "@/lib/auth";
+import { verifyIdToken } from "@/lib/firebase-admin";
 import { eq, and, count } from "drizzle-orm";
 
 interface RouteParams {
@@ -13,10 +13,19 @@ interface RouteParams {
 // POST /api/craft-rooms/[roomId]/join - Join a craft room
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    const user = await verifyIdToken(idToken);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Invalid authentication token" },
         { status: 401 }
       );
     }
@@ -46,7 +55,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       .where(
         and(
           eq(craftRoomParticipants.roomId, roomId),
-          eq(craftRoomParticipants.userId, user.id),
+          eq(craftRoomParticipants.userId, user.uid),
           eq(craftRoomParticipants.leftAt, null) // Still active
         )
       )
@@ -84,7 +93,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check if room requires approval (for future implementation)
-    if (roomData.requiresApproval && roomData.hostId !== user.id) {
+    if (roomData.requiresApproval && roomData.hostId !== user.uid) {
       // For now, we'll allow joining. Later we can implement approval workflow
     }
 
@@ -93,7 +102,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       .insert(craftRoomParticipants)
       .values({
         roomId,
-        userId: user.id,
+        userId: user.uid,
         role: "participant",
       })
       .returning();
@@ -118,10 +127,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/craft-rooms/[roomId]/join - Leave a craft room
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    const user = await verifyIdToken(idToken);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Invalid authentication token" },
         { status: 401 }
       );
     }
@@ -135,7 +153,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       .where(
         and(
           eq(craftRoomParticipants.roomId, roomId),
-          eq(craftRoomParticipants.userId, user.id),
+          eq(craftRoomParticipants.userId, user.uid),
           eq(craftRoomParticipants.leftAt, null)
         )
       )
@@ -164,7 +182,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       .where(eq(craftRooms.id, roomId))
       .limit(1);
 
-    if (room.length && room[0].hostId === user.id) {
+    if (room.length && room[0].hostId === user.uid) {
       // Host left - for now just mark them as left
       // TODO: Implement host transfer or auto-end room logic
     }

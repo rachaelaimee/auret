@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useAuth } from "@/components/auth/auth-provider";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,7 @@ interface CreateRoomDialogProps {
 
 export function CreateRoomDialog({ open, onOpenChange, onRoomCreated }: CreateRoomDialogProps) {
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   const form = useForm<CreateRoomForm>({
     resolver: zodResolver(createRoomSchema),
@@ -52,12 +54,18 @@ export function CreateRoomDialog({ open, onOpenChange, onRoomCreated }: CreateRo
   });
 
   const onSubmit = async (data: CreateRoomForm) => {
+    if (!user) return;
+    
     setLoading(true);
     try {
+      // Get the user's ID token for authentication
+      const idToken = await user.getIdToken();
+      
       const response = await fetch("/api/craft-rooms", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`,
         },
         body: JSON.stringify(data),
       });

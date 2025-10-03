@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { craftRooms, craftRoomParticipants } from "@/lib/db/schema";
-import { getCurrentUser } from "@/lib/auth";
+import { verifyIdToken } from "@/lib/firebase-admin";
 import { z } from "zod";
 import { createId } from "@paralleldrive/cuid2";
 import { eq, and, desc } from "drizzle-orm";
@@ -83,10 +83,20 @@ export async function GET(request: NextRequest) {
 // POST /api/craft-rooms - Create a new craft room
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    // Get the authorization header
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    const user = await verifyIdToken(idToken);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Invalid authentication token" },
         { status: 401 }
       );
     }
@@ -105,7 +115,7 @@ export async function POST(request: NextRequest) {
       .insert(craftRooms)
       .values({
         id: roomId,
-        hostId: user.id,
+        hostId: user.uid,
         title: validatedData.title,
         description: validatedData.description,
         tags: validatedData.tags,
@@ -124,7 +134,7 @@ export async function POST(request: NextRequest) {
     // Add the host as the first participant
     await db.insert(craftRoomParticipants).values({
       roomId: room.id,
-      userId: user.id,
+      userId: user.uid,
       role: "host",
     });
 
