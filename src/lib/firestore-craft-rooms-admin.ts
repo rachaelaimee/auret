@@ -47,15 +47,10 @@ function generateRoomId(): string {
 async function createDailyRoom(roomName: string): Promise<{ url: string; name: string }> {
   const DAILY_API_KEY = process.env.DAILY_API_KEY;
   
-  console.log('Creating Daily.co room:', roomName);
-  console.log('API Key exists:', !!DAILY_API_KEY);
-  console.log('API Key length:', DAILY_API_KEY?.length);
-  
   if (!DAILY_API_KEY) {
     throw new Error('DAILY_API_KEY environment variable is not set');
   }
 
-  // Simplified request body - let's start with minimal properties
   const requestBody = {
     name: roomName,
     privacy: 'public',
@@ -64,8 +59,6 @@ async function createDailyRoom(roomName: string): Promise<{ url: string; name: s
       exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // Expire in 24 hours
     },
   };
-
-  console.log('Daily.co request body:', JSON.stringify(requestBody, null, 2));
 
   try {
     const response = await fetch('https://api.daily.co/v1/rooms', {
@@ -77,9 +70,6 @@ async function createDailyRoom(roomName: string): Promise<{ url: string; name: s
       body: JSON.stringify(requestBody),
     });
 
-    console.log('Daily.co response status:', response.status);
-    console.log('Daily.co response headers:', Object.fromEntries(response.headers.entries()));
-
     if (!response.ok) {
       const error = await response.text();
       console.error('Daily.co API error response:', error);
@@ -87,7 +77,6 @@ async function createDailyRoom(roomName: string): Promise<{ url: string; name: s
     }
 
     const room = await response.json();
-    console.log('Daily.co room created successfully:', room);
     
     return {
       url: room.url,

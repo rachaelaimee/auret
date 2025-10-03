@@ -62,10 +62,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createRoomSchema.parse(body);
 
-    console.log('Creating craft room with data:', validatedData);
-    console.log('DAILY_API_KEY exists:', !!process.env.DAILY_API_KEY);
-    console.log('NEXT_PUBLIC_DAILY_DOMAIN:', process.env.NEXT_PUBLIC_DAILY_DOMAIN);
-    
     const room = await createCraftRoom(decodedToken.uid, {
       title: validatedData.title,
       description: validatedData.description,
@@ -77,8 +73,6 @@ export async function POST(request: NextRequest) {
         ? new Date(validatedData.scheduledStartAt) 
         : undefined,
     });
-    
-    console.log('Created room:', room);
 
     return NextResponse.json({
       success: true,

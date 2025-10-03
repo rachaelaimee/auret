@@ -33,9 +33,15 @@ export function VideoCall({
     // Create Daily call frame
     const frame = DailyIframe.createFrame(callFrameRef.current, {
       showLeaveButton: false,
-      showFullscreenButton: false,
+      showFullscreenButton: true,
       showLocalVideo: true,
-      showParticipantsBar: false,
+      showParticipantsBar: true,
+      iframeStyle: {
+        width: '100%',
+        height: '100%',
+        border: 'none',
+        borderRadius: '8px',
+      },
       theme: {
         colors: {
           accent: "#1e293b",
@@ -183,9 +189,13 @@ export function VideoCall({
   }
 
   return (
-    <div className="h-full relative">
+    <div className="h-full relative bg-slate-900 rounded-lg overflow-hidden">
       {/* Daily.co iframe container */}
-      <div ref={callFrameRef} className="h-full w-full" />
+      <div 
+        ref={callFrameRef} 
+        className="h-full w-full min-h-[400px]"
+        style={{ minHeight: '400px' }}
+      />
 
       {/* Floating controls */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
