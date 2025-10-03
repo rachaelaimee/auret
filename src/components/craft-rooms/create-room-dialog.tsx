@@ -74,8 +74,12 @@ export function CreateRoomDialog({ open, onOpenChange, onRoomCreated }: CreateRo
       });
 
       const result = await response.json();
+      console.log("Room creation response:", result);
 
       if (result.success) {
+        console.log("Room created successfully:", result.data);
+        console.log("Daily.co room URL:", result.data?.dailyRoomUrl);
+        console.log("Daily.co room name:", result.data?.dailyRoomName);
         onRoomCreated(result.data);
         form.reset();
       } else {

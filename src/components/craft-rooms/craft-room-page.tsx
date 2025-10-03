@@ -54,8 +54,12 @@ export function CraftRoomPage({ roomId }: CraftRoomPageProps) {
     try {
       const response = await fetch(`/api/craft-rooms/${roomId}`);
       const result = await response.json();
+      console.log("Room details response:", result);
 
       if (result.success) {
+        console.log("Room data:", result.data);
+        console.log("Daily.co room URL from fetch:", result.data?.dailyRoomUrl);
+        console.log("Daily.co room name from fetch:", result.data?.dailyRoomName);
         setRoom(result.data);
         // Check if user is already in the room
         const userParticipant = result.data.participants.find(
