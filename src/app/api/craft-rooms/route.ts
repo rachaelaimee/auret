@@ -3,7 +3,7 @@ import { adminAuth } from "@/lib/firebase-admin";
 import { 
   createCraftRoom, 
   getCraftRooms 
-} from "@/lib/firestore-craft-rooms";
+} from "@/lib/firestore-craft-rooms-admin";
 import { z } from "zod";
 
 const createRoomSchema = z.object({

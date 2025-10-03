@@ -1,20 +1,8 @@
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  deleteDoc,
-  query, 
-  where, 
-  orderBy, 
-  limit as firestoreLimit,
-  serverTimestamp,
-  Timestamp 
-} from 'firebase/firestore';
-import { db } from './firebase';
 import { adminDb } from './firebase-admin';
+import { 
+  FieldValue,
+  Timestamp 
+} from 'firebase-admin/firestore';
 
 // Types
 export interface CraftRoom {
@@ -103,20 +91,20 @@ export async function createCraftRoom(
     dailyRoomName,
     dailyRoomUrl,
     scheduledStartAt: roomData.scheduledStartAt ? Timestamp.fromDate(roomData.scheduledStartAt) : undefined,
-    actualStartedAt: serverTimestamp() as Timestamp,
-    createdAt: serverTimestamp() as Timestamp,
-    updatedAt: serverTimestamp() as Timestamp,
+    actualStartedAt: FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   };
 
   // Create room document
-  const docRef = await addDoc(collection(db, CRAFT_ROOMS_COLLECTION), room);
+  const docRef = await adminDb.collection(CRAFT_ROOMS_COLLECTION).add(room);
   
   // Add host as first participant
-  await addDoc(collection(db, CRAFT_ROOM_PARTICIPANTS_COLLECTION), {
+  await adminDb.collection(CRAFT_ROOM_PARTICIPANTS_COLLECTION).add({
     roomId: docRef.id,
     userId: hostId,
     role: 'host',
-    joinedAt: serverTimestamp(),
+    joinedAt: FieldValue.serverTimestamp(),
     isVideoEnabled: true,
     isAudioEnabled: true,
     isBanned: false,
@@ -130,7 +118,7 @@ export async function createCraftRoom(
 
 export async function getCraftRooms(limit = 20): Promise<CraftRoom[]> {
   const q = query(
-    collection(db, CRAFT_ROOMS_COLLECTION),
+    collection(adminDb, CRAFT_ROOMS_COLLECTION),
     where('status', '==', 'active'),
     where('isPublic', '==', true),
     orderBy('createdAt', 'desc'),
@@ -145,7 +133,7 @@ export async function getCraftRooms(limit = 20): Promise<CraftRoom[]> {
 }
 
 export async function getCraftRoom(roomId: string): Promise<CraftRoom | null> {
-  const docRef = doc(db, CRAFT_ROOMS_COLLECTION, roomId);
+  const docRef = doc(adminDb, CRAFT_ROOMS_COLLECTION, roomId);
   const docSnap = await getDoc(docRef);
   
   if (docSnap.exists()) {
@@ -162,7 +150,7 @@ export async function updateCraftRoom(
   roomId: string, 
   updates: Partial<Omit<CraftRoom, 'id' | 'createdAt'>>
 ): Promise<void> {
-  const docRef = doc(db, CRAFT_ROOMS_COLLECTION, roomId);
+  const docRef = doc(adminDb, CRAFT_ROOMS_COLLECTION, roomId);
   await updateDoc(docRef, {
     ...updates,
     updatedAt: serverTimestamp(),
@@ -170,7 +158,7 @@ export async function updateCraftRoom(
 }
 
 export async function endCraftRoom(roomId: string): Promise<void> {
-  const docRef = doc(db, CRAFT_ROOMS_COLLECTION, roomId);
+  const docRef = doc(adminDb, CRAFT_ROOMS_COLLECTION, roomId);
   await updateDoc(docRef, {
     status: 'ended',
     endedAt: serverTimestamp(),
@@ -179,7 +167,7 @@ export async function endCraftRoom(roomId: string): Promise<void> {
 
   // Mark all participants as left
   const participantsQuery = query(
-    collection(db, CRAFT_ROOM_PARTICIPANTS_COLLECTION),
+    collection(adminDb, CRAFT_ROOM_PARTICIPANTS_COLLECTION),
     where('roomId', '==', roomId),
     where('leftAt', '==', null)
   );
@@ -198,7 +186,7 @@ export async function endCraftRoom(roomId: string): Promise<void> {
 export async function joinCraftRoom(roomId: string, userId: string): Promise<CraftRoomParticipant> {
   // Check if user is already in the room
   const existingQuery = query(
-    collection(db, CRAFT_ROOM_PARTICIPANTS_COLLECTION),
+    collection(adminDb, CRAFT_ROOM_PARTICIPANTS_COLLECTION),
     where('roomId', '==', roomId),
     where('userId', '==', userId),
     where('leftAt', '==', null)
@@ -224,7 +212,7 @@ export async function joinCraftRoom(roomId: string, userId: string): Promise<Cra
     isBanned: false,
   };
 
-  const docRef = await addDoc(collection(db, CRAFT_ROOM_PARTICIPANTS_COLLECTION), participant);
+  const docRef = await addDoc(collection(adminDb, CRAFT_ROOM_PARTICIPANTS_COLLECTION), participant);
   
   return {
     id: docRef.id,
@@ -234,7 +222,7 @@ export async function joinCraftRoom(roomId: string, userId: string): Promise<Cra
 
 export async function leaveCraftRoom(roomId: string, userId: string): Promise<void> {
   const participantQuery = query(
-    collection(db, CRAFT_ROOM_PARTICIPANTS_COLLECTION),
+    collection(adminDb, CRAFT_ROOM_PARTICIPANTS_COLLECTION),
     where('roomId', '==', roomId),
     where('userId', '==', userId),
     where('leftAt', '==', null)
@@ -251,7 +239,7 @@ export async function leaveCraftRoom(roomId: string, userId: string): Promise<vo
 
 export async function getRoomParticipants(roomId: string): Promise<CraftRoomParticipant[]> {
   const q = query(
-    collection(db, CRAFT_ROOM_PARTICIPANTS_COLLECTION),
+    collection(adminDb, CRAFT_ROOM_PARTICIPANTS_COLLECTION),
     where('roomId', '==', roomId)
   );
 
@@ -281,7 +269,7 @@ export async function sendCraftRoomMessage(
     updatedAt: serverTimestamp() as Timestamp,
   };
 
-  const docRef = await addDoc(collection(db, CRAFT_ROOM_MESSAGES_COLLECTION), message);
+  const docRef = await addDoc(collection(adminDb, CRAFT_ROOM_MESSAGES_COLLECTION), message);
   
   return {
     id: docRef.id,
@@ -291,7 +279,7 @@ export async function sendCraftRoomMessage(
 
 export async function getRoomMessages(roomId: string, limit = 50): Promise<CraftRoomMessage[]> {
   const q = query(
-    collection(db, CRAFT_ROOM_MESSAGES_COLLECTION),
+    collection(adminDb, CRAFT_ROOM_MESSAGES_COLLECTION),
     where('roomId', '==', roomId),
     where('isDeleted', '==', false),
     orderBy('createdAt', 'desc'),

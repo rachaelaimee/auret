@@ -5,7 +5,7 @@ import {
   joinCraftRoom,
   leaveCraftRoom,
   getRoomParticipants
-} from "@/lib/firestore-craft-rooms";
+} from "@/lib/firestore-craft-rooms-admin";
 
 interface RouteParams {
   params: {
