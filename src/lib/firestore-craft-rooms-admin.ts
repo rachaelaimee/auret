@@ -55,16 +55,12 @@ async function createDailyRoom(roomName: string): Promise<{ url: string; name: s
     throw new Error('DAILY_API_KEY environment variable is not set');
   }
 
+  // Simplified request body - let's start with minimal properties
   const requestBody = {
     name: roomName,
     privacy: 'public',
     properties: {
       max_participants: 50,
-      enable_chat: true,
-      enable_screenshare: true,
-      enable_recording: false,
-      start_video_off: false,
-      start_audio_off: false,
       exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // Expire in 24 hours
     },
   };
