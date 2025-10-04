@@ -53,5 +53,25 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && 
         resource.data.authorId == request.auth.uid;
     }
+    
+    // Craft Rooms collection
+    match /craftRooms/{roomId} {
+      allow read: if resource == null || resource.data.isPublic == true || 
+        (request.auth != null && resource.data.hostId == request.auth.uid);
+      allow create: if request.auth != null && 
+        request.auth.uid == resource.data.hostId;
+      allow update, delete: if request.auth != null && 
+        resource.data.hostId == request.auth.uid;
+    }
+    
+    // Craft Room Participants collection
+    match /craftRoomParticipants/{participantId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Craft Room Messages collection
+    match /craftRoomMessages/{messageId} {
+      allow read, write: if request.auth != null;
+    }
   }
 }
