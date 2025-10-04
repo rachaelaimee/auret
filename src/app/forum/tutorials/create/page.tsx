@@ -166,9 +166,53 @@ function CreateTutorialPage() {
         throw new Error('Difficulty level is required')
       }
 
-      // Temporarily skip images to avoid Firestore size limits
-      // TODO: Implement proper image upload to cloud storage
-      const imageData: { id: string; url: string; alt?: string; order: number }[] = []
+      // Resize and compress images before storing
+      const imageData = await Promise.all(
+        images.map(async (file, index) => {
+          return new Promise<{ id: string; url: string; alt?: string; order: number }>((resolve) => {
+            const canvas = document.createElement('canvas')
+            const ctx = canvas.getContext('2d')
+            const img = new Image()
+            
+            img.onload = () => {
+              // Calculate new dimensions (max 800px width/height, maintain aspect ratio)
+              const maxSize = 800
+              let { width, height } = img
+              
+              if (width > height) {
+                if (width > maxSize) {
+                  height = (height * maxSize) / width
+                  width = maxSize
+                }
+              } else {
+                if (height > maxSize) {
+                  width = (width * maxSize) / height
+                  height = maxSize
+                }
+              }
+              
+              canvas.width = width
+              canvas.height = height
+              
+              // Draw and compress image
+              ctx?.drawImage(img, 0, 0, width, height)
+              
+              // Convert to JPEG with 0.8 quality for smaller file size
+              const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8)
+              
+              resolve({
+                id: `img_${Date.now()}_${index}`,
+                url: compressedDataUrl,
+                alt: formData.title,
+                order: index
+              })
+            }
+            
+            // Create object URL for the image
+            img.src = URL.createObjectURL(file)
+          })
+        })
+      )
 
       const tutorialData: Omit<Tutorial, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'views'> = {
         authorId: user.uid,
@@ -327,8 +371,7 @@ function CreateTutorialPage() {
           </Card>
 
           {/* Images */}
-            {/* Temporarily disabled - TODO: Implement proper image upload */}
-            {false && <Card>
+            <Card>
               <CardHeader>
                 <CardTitle>Tutorial Images</CardTitle>
                 <CardDescription>Add photos to illustrate your tutorial (up to 5 images)</CardDescription>
@@ -374,7 +417,7 @@ function CreateTutorialPage() {
                 )}
               </div>
             </CardContent>
-          </Card>}
+          </Card>
 
           {/* Tutorial Content */}
           <Card>
