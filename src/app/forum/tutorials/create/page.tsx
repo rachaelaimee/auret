@@ -44,7 +44,7 @@ const DIFFICULTIES = [
 ]
 
 function CreateTutorialPage() {
-  const { user, authLoading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   
   // Form state
