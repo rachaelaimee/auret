@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@/components/auth/auth-provider'
+import { useAuth, AuthProvider } from '@/components/auth/auth-provider'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,7 +37,7 @@ const DIFFICULTY_COLORS = {
   advanced: 'bg-red-100 text-red-800'
 }
 
-export default function TutorialsPage() {
+function TutorialsPageContent() {
   const { user } = useAuth()
   const [tutorials, setTutorials] = useState<Tutorial[]>([])
   const [loading, setLoading] = useState(true)
@@ -239,5 +239,13 @@ export default function TutorialsPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function TutorialsPage() {
+  return (
+    <AuthProvider>
+      <TutorialsPageContent />
+    </AuthProvider>
   )
 }
