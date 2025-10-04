@@ -64,7 +64,13 @@ export function CraftRoomsPage() {
   );
 
   const handleRoomCreated = (newRoom: CraftRoom) => {
-    setRooms(prev => [newRoom, ...prev]);
+    console.log("handleRoomCreated called with:", newRoom);
+    setRooms(prev => {
+      console.log("Previous rooms:", prev);
+      const updated = [newRoom, ...prev];
+      console.log("Updated rooms:", updated);
+      return updated;
+    });
     setShowCreateDialog(false);
   };
 

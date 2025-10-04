@@ -168,9 +168,12 @@ export async function createCraftRoom(
 
   // Get the created room with server timestamps resolved
   const createdRoom = await docRef.get();
+  const data = createdRoom.data();
   const finalRoom = {
     id: docRef.id,
-    ...createdRoom.data(),
+    ...data,
+    createdAt: data?.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+    participantCount: 1, // Host is the first participant
   } as CraftRoom;
   
   console.log('Final room data:', finalRoom);
@@ -194,9 +197,13 @@ export async function getCraftRooms(limit = 20): Promise<CraftRoom[]> {
     const rooms = snapshot.docs.map(doc => {
       const data = doc.data();
       console.log('Room data:', { id: doc.id, ...data });
+      
+      // Convert Firestore timestamps to strings and add missing fields
       return {
         id: doc.id,
         ...data,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        participantCount: 0, // TODO: Calculate actual participant count
       };
     }) as CraftRoom[];
 
