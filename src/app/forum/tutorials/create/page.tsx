@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '@/components/auth/auth-provider'
+import { useAuth, AuthProvider } from '@/components/auth/auth-provider'
 import { Navigation } from '@/components/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -43,7 +43,7 @@ const DIFFICULTIES = [
   { id: 'advanced', name: 'Advanced', description: 'For experienced makers', color: 'bg-red-100 text-red-800' },
 ]
 
-export default function CreateTutorialPage() {
+function CreateTutorialPage() {
   const { user } = useAuth()
   const router = useRouter()
   
@@ -509,5 +509,13 @@ export default function CreateTutorialPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CreateTutorialPageWrapper() {
+  return (
+    <AuthProvider>
+      <CreateTutorialPage />
+    </AuthProvider>
   )
 }

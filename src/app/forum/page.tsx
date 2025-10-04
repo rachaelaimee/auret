@@ -1,10 +1,16 @@
 import Link from 'next/link'
+import { AuthProvider, useAuth } from '@/components/auth/auth-provider'
+import { Navigation } from '@/components/navigation'
 
-export default function ForumPage() {
+function ForumPageContent() {
+  const { user } = useAuth()
+  
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Curia Corner</h1>
-      <p className="text-slate-600 mb-8">A vibrant community where makers share knowledge, connect with customers, and grow together.</p>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      <Navigation user={user} />
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">Curia Corner</h1>
+        <p className="text-slate-600 mb-8">A vibrant community where makers share knowledge, connect with customers, and grow together.</p>
       
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Link href="/forum/tutorials" className="block">
@@ -30,5 +36,14 @@ export default function ForumPage() {
         </div>
       </div>
     </div>
+    </div>
   );
+}
+
+export default function ForumPage() {
+  return (
+    <AuthProvider>
+      <ForumPageContent />
+    </AuthProvider>
+  )
 }
