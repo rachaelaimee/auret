@@ -8,6 +8,7 @@ import { useUserShops } from '@/hooks/use-user-shops'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Navigation } from '@/components/navigation'
 import Link from 'next/link'
 import { Store } from 'lucide-react'
 
@@ -28,6 +29,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      <Navigation user={user} />
       <header className="border-b bg-white/80 backdrop-blur">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
