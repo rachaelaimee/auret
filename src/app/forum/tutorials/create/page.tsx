@@ -44,7 +44,7 @@ const DIFFICULTIES = [
 ]
 
 function CreateTutorialPage() {
-  const { user } = useAuth()
+  const { user, authLoading } = useAuth()
   const router = useRouter()
   
   // Form state
@@ -72,13 +72,16 @@ function CreateTutorialPage() {
   const [userShop, setUserShop] = useState<any>(null)
 
   useEffect(() => {
+    // Wait for auth to finish loading before checking user
+    if (authLoading) return
+    
     if (!user) {
       router.push('/auth/signin?redirect=' + encodeURIComponent('/forum/tutorials/create'))
       return
     }
     
     loadUserData()
-  }, [user, router])
+  }, [user, authLoading, router])
 
   const loadUserData = async () => {
     if (!user) return
@@ -213,6 +216,23 @@ function CreateTutorialPage() {
 
   if (!user) {
     return null // Will redirect to signin
+  }
+
+  // Show loading while auth is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+        <Navigation user={null} />
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -568,11 +568,11 @@ export async function getPublishedTutorials(limitCount?: number): Promise<Tutori
       return []
     }
     
-    // Now try the filtered query
+    // Now try the filtered query (simplified to avoid index requirement)
     console.log('🔍 Now trying filtered query for published tutorials...')
     const q = limitCount 
-      ? query(tutorialsRef, where('status', '==', 'published'), orderBy('createdAt', 'desc'), limit(limitCount))
-      : query(tutorialsRef, where('status', '==', 'published'), orderBy('createdAt', 'desc'))
+      ? query(tutorialsRef, where('status', '==', 'published'), limit(limitCount))
+      : query(tutorialsRef, where('status', '==', 'published'))
     
     const querySnapshot = await getDocs(q)
     console.log(`✅ Filtered query returned ${querySnapshot.size} published tutorials`)
