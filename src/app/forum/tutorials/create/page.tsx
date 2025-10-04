@@ -214,10 +214,6 @@ function CreateTutorialPage() {
     }
   }
 
-  if (!user) {
-    return null // Will redirect to signin
-  }
-
   // Show loading while auth is loading
   if (authLoading) {
     return (
@@ -233,6 +229,10 @@ function CreateTutorialPage() {
         </div>
       </div>
     )
+  }
+
+  if (!user) {
+    return null // Will redirect to signin
   }
 
   return (
