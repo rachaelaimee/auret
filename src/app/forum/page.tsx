@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { AuthProvider, useAuth } from '@/components/auth/auth-provider'
 import { Navigation } from '@/components/navigation'
