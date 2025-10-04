@@ -166,23 +166,9 @@ function CreateTutorialPage() {
         throw new Error('Difficulty level is required')
       }
 
-      // For now, we'll store image files as base64 (in production, you'd upload to cloud storage)
-      const imageData = await Promise.all(
-        images.map(async (file, index) => {
-          return new Promise<{ id: string; url: string; alt?: string; order: number }>((resolve) => {
-            const reader = new FileReader()
-            reader.onload = (e) => {
-              resolve({
-                id: `img_${Date.now()}_${index}`,
-                url: e.target?.result as string,
-                alt: formData.title,
-                order: index
-              })
-            }
-            reader.readAsDataURL(file)
-          })
-        })
-      )
+      // Temporarily skip images to avoid Firestore size limits
+      // TODO: Implement proper image upload to cloud storage
+      const imageData: { id: string; url: string; alt?: string; order: number }[] = []
 
       const tutorialData: Omit<Tutorial, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'views'> = {
         authorId: user.uid,
@@ -341,11 +327,12 @@ function CreateTutorialPage() {
           </Card>
 
           {/* Images */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Tutorial Images</CardTitle>
-              <CardDescription>Add photos to illustrate your tutorial (up to 5 images)</CardDescription>
-            </CardHeader>
+            {/* Temporarily disabled - TODO: Implement proper image upload */}
+            {false && <Card>
+              <CardHeader>
+                <CardTitle>Tutorial Images</CardTitle>
+                <CardDescription>Add photos to illustrate your tutorial (up to 5 images)</CardDescription>
+              </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
@@ -387,7 +374,7 @@ function CreateTutorialPage() {
                 )}
               </div>
             </CardContent>
-          </Card>
+          </Card>}
 
           {/* Tutorial Content */}
           <Card>
